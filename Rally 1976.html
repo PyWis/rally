@@ -458,8 +458,8 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
           <section class="sec" id="tyreBlock">
             <h2 class="sh">Gomme in partenza<button class="q" type="button" data-help="tyres" aria-label="Informazioni sulle gomme">?</button></h2>
             <div class="opts two" role="group" aria-label="Gomme alla partenza">
-              <button class="opt" data-tyre="soft" aria-pressed="false"><b style="color:#ff5a4f">Morbide</b><em class="tag">Più spunto</em><small>+10% accelerazione, usura 10-20% a giro</small></button>
-              <button class="opt" data-tyre="hard" aria-pressed="true"><b>Dure</b><em class="tag">Durano di più</em><small>Usura 5-12% a giro</small></button>
+              <button class="opt" data-tyre="soft" aria-pressed="false"><b style="color:#ff5a4f">Morbide</b><em class="tag">Più spunto</em><small>+10% accelerazione, usura 16-30% a giro</small></button>
+              <button class="opt" data-tyre="hard" aria-pressed="true"><b>Dure</b><em class="tag">Durano di più</em><small>Usura 10-22% a giro</small></button>
             </div>
           </section>
           <section class="sec">
@@ -492,7 +492,8 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
 <!-- regole: compaiono solo nella finestra (?) -->
 <template id="tplRules">
   <div class="it"><h3>Danni</h3><p>Ogni urto costa dal 5% al 21%. Sopra il 50% arriva la bandiera arancione: rientra ai box.</p></div>
-  <div class="it"><h3>Gomme</h3><p>Ogni passaggio sul traguardo le consuma: morbide 10-20%, dure 5-12%, da pioggia dal 5% al 50% secondo quanto è bagnato il giro. Hai 2 set di morbide per gara, partenza compresa.</p></div>
+  <div class="it"><h3>Gomme</h3><p>Ogni passaggio sul traguardo le consuma: morbide 16-30%, dure 10-22%, da pioggia dal 10% al 50% secondo quanto è bagnato il giro (all’asciutto 40-50%). Hai 2 set di morbide per gara, partenza compresa.</p></div>
+  <div class="it"><h3>Foratura</h3><p>Più le gomme sono consumate più rischi di forare: fino al 40% una volta ogni 1000 giri, poi 1 su 100, 1 su 40 oltre il 50%, 1 su 10 oltre il 60%, 1 su 2 oltre l’80%. La foratura costa 20% di danni e 20% di usura. Al 90% di usura l’auto non sterza più e appena esci di strada sei ritirato.</p></div>
   <div class="it"><h3>Box</h3><p>Ti fermi 10 secondi: danni dimezzati e gomme nuove a scelta.</p></div>
   <div class="it"><h3>Fantasma</h3><p>Dal secondo giro corri contro il fantasma del tuo giro migliore.</p></div>
   <div class="it keys-desk"><h3>Comandi</h3>
@@ -732,9 +733,9 @@ const SURF=[
   {drag:7.0,grip:2.0, acc:0.20}];
 const WET=[0.28,0.28,0.4,0.45,1];   // gomme da asciutto sotto la pioggia: grip crollato
 const TYRES={
-  soft:{name:'Morbide',k:'M',color:'#ff5a4f',acc:1.10,wear:1.10},
-  hard:{name:'Dure',   k:'D',color:'#f3efd8',acc:1.00,wear:1.00},
-  wet: {name:'Pioggia',k:'P',color:'#5aa8ff',acc:1.00,wear:1.00}};   // con il sereno usura +40%
+  soft:{name:'Morbide',k:'M',color:'#ff5a4f',acc:1.10},
+  hard:{name:'Dure',   k:'D',color:'#f3efd8',acc:1.00},
+  wet: {name:'Pioggia',k:'P',color:'#5aa8ff',acc:1.00}};   // l’usura per giro sta in lapCheck
 function surfaceAt(x,y,d,i){
   const hw=WD?WD[i]:HALF;
   if(d<hw||inSquare(x,y)) return 0;
@@ -1637,6 +1638,21 @@ function aquaOut(c){
   c.out=true; c.outT=0; puff(c.x,c.y,'#cfe6ff',20,160,0.8,8);
   if(c===player){cam.shake=8; showMsg('Fuori pista con le gomme da asciutto: ritirato',2.6,true); sfxHit(20);}
 }
+// probabilità di foratura a giro secondo l’usura
+const punctureChance=w=>w>80?1/2:w>60?1/10:w>50?1/40:w>40?1/100:1/1000;
+const TYRE_DEAD=90;   // da qui le gomme non fanno più sterzare: appena esci di strada sei ritirato
+function puncture(c){
+  c.dmg=Math.min(100,c.dmg+20); c.wear=Math.min(100,c.wear+20);
+  puff(c.x,c.y,'#2a2a2a',14,140,0.8,7);
+  if(c===player){cam.shake=Math.max(cam.shake,7); showMsg('Foratura! Danni +20%, usura +20%',2.4,true); sfxHit(15);
+    const b=$('dmgBox'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');}
+  if(c.dmg>50&&c.dmg<100&&!c.flag&&!(SESSION&&SESSION.kind==='practice')){c.flag=true; c.wantPit=true;}
+  if(c.dmg>=100) wreck(c);
+}
+function tyreOut(c){
+  c.out=true; c.outT=0; puff(c.x,c.y,'#3a3a3a',18,140,0.8,8);
+  if(c===player){cam.shake=8; showMsg('Gomme finite, fuori strada: ritirato',2.6,true); sfxHit(20);}
+}
 function respawn(c,idx){
   const p=T[idx]; c.x=p.x+p.nx*clamp(c.lane,-40,40); c.y=p.y+p.ny*clamp(c.lane,-40,40);
   c.a=Math.atan2(p.ty,p.tx); c.vx=c.vy=0; c.blink=1.5; c.prevRear=null; c.stuckT=0; c.reverseT=0;
@@ -1663,7 +1679,7 @@ function updatePit(c,dt){
         p.served=true; c.wantPit=false;
         if(c===player) showMsg('Penalità scontata: niente gomme né riparazioni',1.8,true);
       } else {
-      p.served=true; c.dmg=Math.round(c.dmg/2); c.wear=0; c.flag=false; c.wantPit=false;
+      p.served=true; c.dmg=Math.round(c.dmg/2); c.wear=0; c.punctAt=null; c.flag=false; c.wantPit=false;
       c.tyre=c===player?p.choice:(SESSION&&SESSION.kind==='quali'?aiQualiTyre(c):aiTyre(c));
       if(c.tyre==='soft'){ if(c.softLeft>0) c.softLeft--; else c.tyre='hard'; }   // massimo 2 set di morbide
       if(c===player) showMsg('Danni dimezzati, gomme '+TYRES[c.tyre].name.toLowerCase(),1.8,true);
@@ -1787,6 +1803,7 @@ function lapCheck(c,near,drive,speed,dt){
   let d=near.i-c.lastIdx; if(d>N/2)d-=N; if(d<-N/2)d+=N;
   c.lastIdx=near.i; c.progress+=d;
   if(c.engineAt!=null&&state==='race'&&!c.pit&&!c.finished&&!c.out&&c.progress>=c.engineAt){c.engineAt=null; engineFail(c); return;}
+  if(c.punctAt!=null&&state==='race'&&!c.pit&&!c.finished&&!c.out&&c.progress>=c.punctAt){c.punctAt=null; puncture(c);}
   if(c===player) c.wrongT=(d<0&&speed>40&&!c.pit)?c.wrongT+dt:Math.max(0,c.wrongT-dt*2);
   if(drive&&c.progress>=N){
     c.progress-=N; c.laps++;
@@ -1799,11 +1816,13 @@ function lapCheck(c,near,drive,speed,dt){
     // qualifiche: dopo un giro valido il computer rientra ai box a cambiare le gomme
     if(SESSION&&SESSION.kind==='quali'&&c!==player&&flying&&valid&&!c.finished&&raceTime<SESSION.dur) c.wantPit=true;
     const recTxt=c===player&&!c.finished?onPlayerLap(lt,flying&&valid):'';
-    // usura per giro: morbide 10-20, dure 5-12; da pioggia secondo quanto del giro è stato bagnato
+    // usura per giro: morbide 16-30, dure 10-22; da pioggia secondo quanto del giro è stato bagnato
     const rnd=(a,b)=>a+Math.random()*(b-a), wf=(c.wetT||0)/Math.max(1e-6,c.lapT||0);
-    const tw=Math.round(c.tyre==='soft'?rnd(10,20):c.tyre==='hard'?rnd(5,12):wf<=0?rnd(40,50):wf<0.5?rnd(10,24):rnd(5,12));
+    const tw=Math.round(c.tyre==='soft'?rnd(16,30):c.tyre==='hard'?rnd(10,22):wf<=0?rnd(40,50):wf<0.5?rnd(16,34):rnd(10,22));
     c.lapT=0; c.wetT=0;
-    c.wear=Math.min(100,c.wear+tw);
+    if(!c.finished) c.wear=Math.min(100,c.wear+tw);   // dopo il traguardo le gomme non si consumano più
+    // foratura: più le gomme sono consumate, più è probabile che si buchino durante il giro che inizia
+    if(c.punctAt==null&&!c.finished&&!c.out&&Math.random()<punctureChance(c.wear)) c.punctAt=(0.1+Math.random()*0.85)*N;
     let fin=false;
     if(!c.finished){
       if(SESSION) fin=SESSION.kind==='quali'&&raceTime>=SESSION.dur;   // qualifiche: dopo la bandiera si chiude il giro
@@ -1849,7 +1868,7 @@ function aiControl(c,dt){
   } else if(!c.finished){
     const prob=Math.min(100,c.dmg+Math.max(0,c.wear));
     const last=lastLap(c);
-    if(c.flag||(prob>=c.pitThr&&!last)) c.wantPit=true;
+    if(c.flag||(prob>=c.pitThr&&!last)||c.wear>=70) c.wantPit=true;   // con il 70% di usura si rientra comunque
     if(!last){
       if(raining&&rainLevel>0.3&&c.tyre!=='wet') c.wantPit=true;
       if(!raining&&rainLevel<0.15&&c.tyre==='wet'&&c.dryEager) c.wantPit=true;
@@ -1985,6 +2004,9 @@ function physics(c,ctrl,dt){
   let vf=c.vx*fx+c.vy*fy, vl=-c.vx*fy+c.vy*fx;
   // doppia pioggia con gomme da asciutto: appena esci di strada sei fuori gara
   if(drive&&heavyLevel>0.5&&c.tyre!=='wet'&&near.d>WD[near.i]-4){ aquaOut(c); return; }
+  // gomme al 90%: la macchina non sterza più e appena esce di strada (terra, erba) è ritirata
+  const tyreDead=c.wear>=TYRE_DEAD&&!c.finished;
+  if(drive&&tyreDead&&surf>=2){ tyreOut(c); return; }
   const SF=SURF[surf], wet=rainLevel, dmg=c.dmg/100;
   // aderenza: asciutto normale · pioggia: gomme da asciutto basse, da pioggia quasi normali · doppia pioggia: da pioggia basse
   const wetPen=MAP.ice?1:c.tyre==='wet'?0.13*rainLevel+0.87*heavyLevel:rainLevel;   // ghiaccio: sempre come la pioggia con gomme da asciutto
@@ -1994,6 +2016,7 @@ function physics(c,ctrl,dt){
 
   let steerT=ctrl.steer; if(prob>0.4&&Math.abs(vf)>60) steerT=clamp(steerT+c.pull*(prob-0.4)/0.6*0.18,-1,1);
   if(c.tyre!=='wet'&&heavyLevel>0.5) steerT=0;   // doppia pioggia con gomme da asciutto: non si sterza
+  if(tyreDead) steerT=0;                           // gomme finite: non si sterza
   c.steer+=(steerT-c.steer)*Math.min(1,dt*10);
 
   if(thr>0) vf+=640*SF.acc*power*(1-0.08*wetPen)*thr*dt;
@@ -2410,6 +2433,7 @@ function updateHud(dt){
   const fc=raining?null:forecasts.find(f=>f.issued&&!f.done);
   setText(hud.fc,fc?'Previsione: pioggia '+inLaps(fcLaps(fc)):'');
   hud.wearPct.textContent=Math.round(player.wear)+'%'; hud.wearBar.style.width=player.wear+'%';
+  hud.wearBar.style.background=player.wear>=80?'#e8322f':player.wear>40?'#ff9a3c':'';   // oltre il 40% si rischia la foratura
   const ty=TYRES[player.tyre]; hud.tyreK.textContent=ty.name; hud.tyreK.style.color=ty.color;
   const pp=player.pit, showPanel=!!(pp&&!pp.served&&!pp.penalty);
   if(hud.pitPanel.hidden===showPanel) hud.pitPanel.hidden=!showPanel;
@@ -2423,9 +2447,11 @@ function updateHud(dt){
   if(state==='redflag') stx='<span class="red">Bandiera rossa'+(redReason?' · '+redReason:'')+'</span>';
   else if(player.pit) stx='Box '+Math.max(0,PIT_TIME-player.pit.t).toFixed(1)+' s';
   else if(player.penalty&&!player.out) stx='<span class="warn"><i class="bw"></i>Bandiera bianca e nera · stop ai box</span>';
+  else if(player.wear>=TYRE_DEAD&&!player.out&&!player.finished) stx='<span class="red">Gomme finite: non sterzi · fuori strada sei ritirato</span>';
   else if(heavyRain&&player.tyre!=='wet'&&!player.out&&!player.finished) stx='<span class="red">Doppia pioggia: con gomme da asciutto non sterzi</span>';
   else if(SC&&!player.out&&!player.finished) stx='<span class="sc">Safety car · niente sorpassi</span>';
   else if(player.flag&&!player.out) stx='<span class="warn"><i class="flag"></i>Rientra ai box</span>';
+  else if(player.wear>60&&!player.out&&!player.finished&&!SESSION) stx='<span class="warn">Gomme consumate: rischio foratura</span>';
   else if(SESSION&&state==='race'&&!player.finished) stx=sessionStatus(st);
   else if(state==='race'&&!player.finished&&(player.boost>0||player.tow)) stx=[player.boost>0?'Boost +'+player.boost+'%':'',player.tow?'Scia':''].filter(Boolean).join(' · ');
   if(hud.status._v!==stx){hud.status.innerHTML=stx; hud.status._v=stx;}
@@ -2710,7 +2736,8 @@ const HELP={
   diff:()=>({title:'Difficoltà',html:[...document.querySelectorAll('.opt[data-diff]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Campionati','La difficoltà si sceglie all’inizio e resta la stessa per tutto il campionato.')}),
   tyres:()=>({title:'Gomme',html:[...document.querySelectorAll('.opt[data-tyre]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
-    item('Pioggia','Si montano ai box quando il giro è bagnato. Con il sereno si consumano il 40% in più.')+
+    item('Pioggia','Si montano ai box quando il giro è bagnato. Su un giro tutto asciutto si consumano del 40-50%.')+
+    item('Foratura','Oltre il 40% di usura il rischio sale in fretta; al 90% l’auto non sterza più.')+
     item('Set di morbide','Ne hai 2 per gara, compreso quello della partenza.')})
 };
 let lastFocus=null;
