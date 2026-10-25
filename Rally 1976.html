@@ -465,9 +465,9 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
           <section class="sec">
             <h2 class="sh">Difficoltà<button class="q" type="button" data-help="diff" aria-label="Informazioni sulla difficoltà">?</button></h2>
             <div class="opts three" role="group" aria-label="Difficoltà">
-              <button class="opt" data-diff="bronze" aria-pressed="true"><b style="color:#d98c4a">Bronze</b><em class="tag">Avversari alla mano</em><small>Il computer prende le curve con prudenza e il gruppo è sgranato</small></button>
-              <button class="opt" data-diff="silver" aria-pressed="false"><b style="color:#d6dbe6">Silver</b><em class="tag">Più veloci</em><small>Curve più rapide, staccate più decise, gruppo più compatto</small></button>
-              <button class="opt" data-diff="gold" aria-pressed="false"><b style="color:var(--gold)">Gold</b><em class="tag">Al limite</em><small>Il computer guida al limite: anche gli ultimi sono veloci</small></button>
+              <button class="opt" data-diff="bronze" aria-pressed="true"><b style="color:#d98c4a">Bronze</b><em class="tag">Avversari alla mano</em><small>Il computer vince circa metà delle gare</small></button>
+              <button class="opt" data-diff="silver" aria-pressed="false"><b style="color:#d6dbe6">Silver</b><em class="tag">Più veloci</em><small>Il computer vince circa 3 gare su 4</small></button>
+              <button class="opt" data-diff="gold" aria-pressed="false"><b style="color:var(--gold)">Gold</b><em class="tag">Al limite</em><small>Il computer vince circa 9 gare su 10</small></button>
             </div>
           </section>
           <section class="sec">
@@ -1180,13 +1180,95 @@ function drawMiniBg(){
   g.fillStyle='#111'; g.fillRect(fp.x*MS-1,fp.y*MS-4,3,8);
 }
 
-// difficoltà dei piloti del computer: f va da 0 (il più forte) a 1 (il più lento)
-//   corner: velocità in curva rispetto a quella "sicura" · vtop: velocità massima · dec: staccata
+// ================= piloti del computer: difficoltà, fasce di forza, apprendimento =================
+// difficoltà · ceil: tetto della velocità in curva (rispetto alla formula di base) che i piloti possono imparare
+//   vtop: velocità massima · dec: staccata · win: quota di gare che il computer deve vincere contro di te.
+//   Il tetto si autoregola dopo ogni gara (SAVE.cal) per avvicinarsi a quella quota.
 const DIFFS={
-  bronze:{name:'Bronze',corner:f=>1.00-0.12*f, vtop:f=>0.97-0.07*f, dec:650},
-  silver:{name:'Silver',corner:f=>1.07-0.08*f, vtop:f=>1.00-0.05*f, dec:750},
-  gold:  {name:'Gold',  corner:f=>1.16-0.05*f, vtop:f=>1.03-0.03*f, dec:860}};
+  bronze:{name:'Bronze',ceil:1.00,vtop:0.97,dec:650,win:0.50},
+  silver:{name:'Silver',ceil:1.08,vtop:1.00,dec:750,win:0.75},
+  gold:  {name:'Gold',  ceil:1.18,vtop:1.03,dec:860,win:0.90}};
 const diffKey=d=>DIFFS[d]?d:'bronze';
+const calOf=d=>clamp((SAVE.cal&&SAVE.cal[d])??1,0.85,1.2);
+// fasce di forza, assegnate a caso: 10% top, 20% qualche difficoltà, 30% e 30% le successive (il restante 10% sei tu)
+// rate: quanto in fretta il pilota impara
+const TIERS=[
+  {name:'Top',               share:1,ceil:1.00,vtop:1.000,rate:0.020},
+  {name:'Qualche difficoltà',share:2,ceil:0.95,vtop:0.985,rate:0.016},
+  {name:'In difficoltà',     share:3,ceil:0.90,vtop:0.970,rate:0.012},
+  {name:'Molte difficoltà',  share:3,ceil:0.86,vtop:0.955,rate:0.009}];
+function tierSizes(n){   // ripartizione delle fasce su n piloti (metodo dei resti più grandi)
+  const tot=TIERS.reduce((a,t)=>a+t.share,0), raw=TIERS.map(t=>t.share*n/tot), out=raw.map(Math.floor);
+  const order=raw.map((v,i)=>[v-out[i],i]).sort((a,b)=>b[0]-a[0]);
+  for(let k=0;out.reduce((a,b)=>a+b,0)<n;k++) out[order[k%order.length][1]]++;
+  return out;
+}
+// apprendimento: ogni pilota del computer ha, per ogni pista e per ogni condizione (asciutto, pioggia, ghiaccio),
+// due valori per ogni tratto di pista (LCELL punti del tracciato):
+//   L: quanto ha imparato, come frazione del suo tetto (fascia × difficoltà), da L0 a 1
+//   B: il limite fisico scoperto, cioè il moltiplicatore di velocità a cui in quel tratto è uscito di strada
+// Tratto guidato al limite e pulito: L sale. Uscita di strada, urto o acqua: L scende nei tratti prima e B si abbassa.
+// Tutto si azzera il lunedì.
+const LEARN_KEY='rallyPista.learn', LCELL=8, L0=0.92, LMIN=0.5, LMAX=1.75;
+const weekId=()=>{const d=new Date(); d.setDate(d.getDate()-(d.getDay()+6)%7);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+let LEARN={week:weekId(),t:{}};
+try{const o=JSON.parse(localStorage.getItem(LEARN_KEY)||'null');
+  if(o&&o.week===LEARN.week&&o.t) LEARN=o; else if(o) localStorage.setItem(LEARN_KEY,JSON.stringify(LEARN));   // settimana nuova: si riparte da zero
+}catch(_){}
+const LEARN_MEM=new Map();
+function learnWeekCheck(){ const w=weekId(); if(LEARN.week!==w){ LEARN={week:w,t:{}}; LEARN_MEM.clear(); learnSave(); } }
+const lEnc=a=>Array.from(a,v=>clamp(Math.round((v-LMIN)*200),0,250).toString(16).padStart(2,'0')).join('');
+const lDec=(h,i)=>LMIN+parseInt(h.substr(i*2,2),16)/200;
+const lEff=(c,t,q)=>Math.min(t.L[q]*c.ceil,t.B[q]*0.985);   // moltiplicatore della velocità in curva usato in gara
+function learnTable(key,cond){
+  const id=MAP.id+'|'+key+'|'+cond; let t=LEARN_MEM.get(id); if(t) return t;
+  const n=Math.ceil(N/LCELL), L=new Float32Array(n).fill(L0), B=new Float32Array(n).fill(LMAX);
+  const sv=((LEARN.t[MAP.id]||{})[key]||{})[cond];
+  if(sv&&sv.L.length===n*2&&sv.B.length===n*2) for(let i=0;i<n;i++){L[i]=lDec(sv.L,i); B[i]=lDec(sv.B,i);}
+  t={L,B,dirty:false}; LEARN_MEM.set(id,t); return t;
+}
+function learnSave(){
+  for(const [id,t] of LEARN_MEM){ if(!t.dirty) continue; const [tr,key,cond]=id.split('|');
+    const T1=LEARN.t[tr]||(LEARN.t[tr]={}), K=T1[key]||(T1[key]={}); K[cond]={L:lEnc(t.L),B:lEnc(t.B)}; t.dirty=false; }
+  try{localStorage.setItem(LEARN_KEY,JSON.stringify(LEARN));}catch(_){}
+}
+// condizione in cui si guida e condizione in cui si impara (nei passaggi asciutto/bagnato e con la doppia pioggia non si impara)
+const driveCond=()=>MAP.ice?'ice':rainLevel>0.5?'wet':'dry';
+const learnCond=c=>MAP.ice?'ice':heavyLevel>0.5?null:rainLevel>0.5?(c.tyre==='wet'?'wet':null):rainLevel<0.15?'dry':null;
+const rainFOf=c=>MAP.ice?0.3:c.tyre==='wet'?1-0.7*heavyLevel:1-0.7*rainLevel;
+function learnStep(c,near,surf,sp){
+  if(!c.learnOn) return;
+  const n=Math.ceil(N/LCELL), cell=(near.i/LCELL)|0;
+  if(surf>=2||c.sink>0||c.lHit) c.lErr=true; c.lHit=false;
+  if(SC||c.pit||c.wantPit||c.finished||c.blink>0||c.reverseT>0||c.lTraffic||state!=='race') c.lBusy=true;
+  if(cell===c.lCell){ c.lMinV=Math.min(c.lMinV,sp); return; }
+  const prev=c.lCell, minV=c.lMinV, err=c.lErr, busy=c.lBusy;
+  c.lCell=cell; c.lMinV=sp; c.lErr=false; c.lBusy=false;
+  if(prev<0||(cell-prev+n)%n!==1) return;             // solo andando avanti di un tratto
+  if(c.lSkip>0){ c.lSkip--; return; }                  // dopo un errore: si rientra in pista senza imparare
+  const cond=learnCond(c); if(!cond) return;
+  const t=learnTable(c.key,cond);
+  if(err){   // la colpa è della velocità nei tratti appena prima
+    for(let k=0;k<3;k++){const q=(prev-k+n)%n; t.B[q]=Math.min(t.B[q],lEff(c,t,q)); t.L[q]=Math.max(LMIN,t.L[q]*0.94);}
+    t.dirty=true; c.lSkip=2; return;
+  }
+  if(busy||t.L[prev]>=1||t.L[prev]*c.ceil>=t.B[prev]*0.985) return;
+  // tratto pulito: se era guidato davvero alla velocità imparata (e non è un rettilineo), si prova ad andare più forte
+  const rf=Math.sqrt(rainFOf(c)), e=lEff(c,t,prev); let lim=Infinity;
+  for(let j=prev*LCELL;j<Math.min(N,(prev+1)*LCELL);j++) lim=Math.min(lim,VS[j]*e*rf);
+  if(lim>=c.vtop*0.97||minV<0.93*lim) return;
+  t.L[prev]=Math.min(1,t.L[prev]+c.rate); t.dirty=true;
+}
+// dopo ogni gara: se vinci più spesso del previsto il tetto dei piloti sale, altrimenti scende
+let raceDiff='bronze';
+function calibrate(){
+  if(!player) return;
+  const d=raceDiff, won=!player.out&&player.finishPos===1, target=1-DIFFS[d].win;
+  SAVE.cal=SAVE.cal||{}; SAVE.cal[d]=+clamp(calOf(d)+0.04*((won?1:0)-target),0.85,1.2).toFixed(3);
+  const st=(SAVE.wins=SAVE.wins||{})[d]||(SAVE.wins[d]={n:0,w:0}); st.n++; if(won) st.w++;
+  store(); learnSave();
+}
 
 // ================= stato della gara =================
 let cars=[], player=null;
@@ -1208,7 +1290,7 @@ const cam={x:0,y:0,zoom:1,shake:0};
 let msgT=0;
 let SC=null, redT=0, ORDER=[];
 const POINTS={storico:[10,6,4,3,2,1], moderno:[25,18,15,12,10,8,6,4,2,1]};
-const AI_KEYS=['corner','vtop','softPref','dryEager','pitThr','style','defend','dec'];
+const AI_KEYS=['corner','tier','vtop','softPref','dryEager','pitThr','style','defend','dec'];
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 const recKey=()=>MAP.id+':'+MODE_KEY;
 const modeName=m=>({time:'Endurance 24 minuti',gp:'Gran Premio','3':'Sprint 3 giri','6':'Principianti 6 giri','9':'Gara 9 giri'})[String(m)]||m+' giri';
@@ -1229,9 +1311,9 @@ function buildRoster(per,team,diff=diffSel){
   const r=[{key:'tu',team,name:COLORS[team].name+(per>1?'1':''),player:true}];
   for(let t=0;t<COLORS.length;t++) for(let k=0;k<per;k++){ if(t===team&&k===0) continue;
     const name=COLORS[t].name+(per>1?String(k+1):''); r.push({key:name,team:t,name}); }
-  const ais=shuffle(r.slice(1));
-  ais.forEach((c,k)=>{const f=k/(ais.length-1), q=Math.random();
-    Object.assign(c,{corner:D.corner(f), vtop:VMAX*D.vtop(f), dec:D.dec, softPref:Math.random(), dryEager:Math.random()<0.6,
+  const ais=shuffle(r.slice(1)), tiers=tierSizes(ais.length).flatMap((n,t)=>Array(n).fill(t));
+  ais.forEach((c,k)=>{const tier=tiers[k], q=Math.random();
+    Object.assign(c,{tier, vtop:VMAX*D.vtop*TIERS[tier].vtop, dec:D.dec, softPref:Math.random(), dryEager:Math.random()<0.6,
       pitThr:30+Math.random()*50, style:q<0.35?'aggressivo':q<0.7?'paziente':'normale', defend:Math.random()<0.5});});
   return r;
 }
@@ -1300,7 +1382,14 @@ function beginRace(o){
   TIMED=o.laps==='time'; LAPS=(TIMED||SESSION)?9999:o.laps; MODE_KEY=o.modeKey; raceRound=CH?CH.round:0;
   chequered=false; timeUpShown=false; SC=null; ORDER=[];
   const roster=o.roster.filter(r=>!o.active||o.active.includes(r.key));
-  cars=roster.map((r,id)=>{const c=makeCar(id,r.team,r.name); c.key=r.key; if(!r.player) for(const k of AI_KEYS) c[k]=r[k]; return c;});
+  learnWeekCheck(); raceDiff=diffKey(CH?CH.diff:diffSel);
+  cars=roster.map((r,id)=>{const c=makeCar(id,r.team,r.name); c.key=r.key;
+    if(!r.player){
+      for(const k of AI_KEYS) if(r[k]!==undefined) c[k]=r[k];
+      const tier=clamp(c.tier??2,0,TIERS.length-1);   // i campionati salvati prima delle fasce: fascia intermedia
+      Object.assign(c,{learnOn:true,lCell:-1,lMinV:0,lSkip:0,rate:TIERS[tier].rate,ceil:DIFFS[raceDiff].ceil*TIERS[tier].ceil*calOf(raceDiff)});
+    }
+    return c;});
   player=cars.find(c=>c.key==='tu')||null;
   const order=o.grid?o.grid.map(k=>cars.find(c=>c.key===k)).filter(Boolean):shuffle(cars.slice());   // senza ordine: griglia casuale
   for(const c of cars) if(!order.includes(c)) order.push(c);
@@ -1342,7 +1431,7 @@ function beginRace(o){
   document.querySelectorAll('#touch button').forEach(b=>b.classList.remove('on'));
 }
 function showMenu(){
-  CH=null; GP=null; SESSION=null; $('hof').hidden=true;
+  learnSave(); CH=null; GP=null; SESSION=null; $('hof').hidden=true;
   state='intro'; document.getElementById('finish').hidden=true; document.getElementById('intro').hidden=false;
   if(MAPS[trackSel].id!==MAP.id) loadTrack(MAPS[trackSel]);
   updateMenu();
@@ -1443,6 +1532,8 @@ function updateMenu(){
   $('champOpts').hidden=!champ; $('trackBlock').hidden=champ||fia||syd; $('tyreBlock').hidden=sel==='gp'||fia||syd;
   $('startBtn').textContent=champ?'Inizia il campionato':fia?'Inizia il campionato FIA':sel==='gp'?'Inizia il Gran Premio':syd?'Corri a Sydney':'Parti';
   press(document.querySelectorAll('[data-diff]'),document.querySelector('[data-diff="'+diffSel+'"]'));
+  document.querySelectorAll('[data-diff]').forEach(b=>{const st=(SAVE.wins||{})[b.dataset.diff], tag=b.querySelector('.tag');
+    tag.dataset.base=tag.dataset.base||tag.textContent; tag.textContent=st&&st.n?'Hai vinto '+st.w+' su '+st.n:tag.dataset.base;});
   const mk=String(champ?champFmt:fia?'gp':sel);
   trackBtns.forEach((b,k)=>{const m=MAPS[k], r=SAVE.records[m.id+':'+mk];
     b.querySelector('.rec').textContent=r&&r.lap?'Record '+fmt(r.lap):'Nessun record';
@@ -1510,7 +1601,7 @@ let prevState=null;
 const canPause=()=>(state==='race'||state==='countdown'||state==='redflag')&&!endShown;
 function pauseGame(){
   if(!canPause()) return;
-  prevState=state; state='pause';
+  prevState=state; state='pause'; learnSave();
   for(const k in input) input[k]=false;
   document.querySelectorAll('#touch button').forEach(b=>b.classList.remove('on'));
   $('pauseText').textContent=GP
@@ -1926,8 +2017,9 @@ function aiControl(c,dt){
   const rainF=MAP.ice?0.3:c.tyre==='wet'?1-0.7*heavyLevel:1-0.7*rainLevel, dec=(c.dec||650)+(c.dive>0?140:0);
   let target=(c.finished?c.vtop*0.7:c.vtop)*(c.tow?1.06:1);
   let dist=-near.t*SEG[near.i];
+  const lt=c.learnOn?learnTable(c.key,driveCond()):null;
   for(let k=0;k<80;k++){
-    const j=(near.i+k)%N, v=VS[j]*c.corner;
+    const j=(near.i+k)%N, v=VS[j]*(lt?lEff(c,lt,(j/LCELL)|0):c.corner);
     const allowed=Math.sqrt(v*v*rainF+2*dec*Math.max(0,dist));
     if(allowed<target) target=allowed;
     dist+=SEG[j]; if(dist>1100) break;
@@ -1938,6 +2030,7 @@ function aiControl(c,dt){
   if(pitting&&rA>-280) target=Math.min(target,240);
   target=Math.min(target,scCap(c));
   if(Math.abs(diff)>0.9) target=Math.min(target,200);
+  c.lTraffic=slow||follow<Infinity||pitting||c.surf>=2;   // velocità decisa dal traffico: il tratto non insegna niente
   if(sp<target-8) ctrl.thr=1; else if(sp>target+30) ctrl.brk=1; else if(sp<target) ctrl.thr=0.5;
 
   if(state==='race'){
@@ -2057,6 +2150,7 @@ function physics(c,ctrl,dt){
       c.vx-=1.5*vn*nx; c.vy-=1.5*vn*ny; c.vx*=0.6; c.vy*=0.6;
       if(-vn>80) puff(c.x-nx*14,c.y-ny*14,o.rect?'#9a958c':'#3a7c2b',8,120,0.5,5);
       hit(c,-vn,c.x-nx*14,c.y-ny*14);
+      if(-vn>80) c.lHit=true;
     }
   });
   if(c.x<20){hit(c,Math.abs(c.vx));c.x=20;c.vx=Math.abs(c.vx)*0.4;}
@@ -2088,6 +2182,7 @@ function physics(c,ctrl,dt){
 
   lapCheck(c,near,drive,speed,dt);
   pitEntryCheck(c,near);
+  learnStep(c,near,surf,speed);
 }
 
 function collideCars(){
@@ -2291,7 +2386,7 @@ function listRows(cs,valFn,outFrom){
 }
 function endSession(){
   if(!SESSION||state==='gpbreak') return;
-  const kind=SESSION.kind; state='gpbreak'; SESSION.over=true;
+  const kind=SESSION.kind; state='gpbreak'; SESSION.over=true; learnSave();
   for(const k in input) input[k]=false;
   const rk=standings(), keys=rk.map(c=>c.key), times={}; for(const c of cars) times[c.key]=c.fbest;
   const myPos=keys.indexOf('tu');
@@ -2357,6 +2452,7 @@ function gpShow(o){
 function gpRaceFinish(){
   endShown=true; finLive=true; SAVE.played[MAP.id]=true; store();
   const fin=GP.phase==='final';
+  if(fin) calibrate(); else learnSave();
   gpShow({sub:MAP.name+' · Gran Premio · '+(fin?'Gara '+GP.finalLaps+' giri':'Sprint '+GP.sprintLaps+' giri'),
     title:player.out?'Ritirata':(player.finishPos===1?'Vittoria!':player.finishPos+'° posto'),
     text:(player.out?'Ritirata al giro '+lapLabel(player)+'.':player.finishPos+'° posto · giro migliore '+fmt(player.best)+'.')
@@ -2487,7 +2583,7 @@ function gapsHTML(){
 
 function showFinish(){
   if(GP){ gpRaceFinish(); return; }
-  endShown=true; finLive=true;
+  endShown=true; finLive=true; calibrate();
   $('againBtn').textContent='Corri di nuovo'; $('gpNext').hidden=true; $('gpTyreBox').hidden=true; $('hofEntry').hidden=true;
   SAVE.played[MAP.id]=true; store();
   $('finSub').textContent=CH?'Gara '+(raceRound+1)+' di '+chLen(CH)+' · '+MAP.name:MAP.name+' · '+modeName(MODE_KEY==='time'?'time':MODE_KEY);
@@ -2514,6 +2610,7 @@ function update(dt){
   }
   if(state==='race'){
     raceTime+=dt;
+    if(Math.floor(raceTime/30)!==Math.floor((raceTime-dt)/30)) learnSave();   // ogni 30 s di gara
     if(TIMED&&!timeUpShown&&raceTime>=RACE_SECS){timeUpShown=true; showMsg('Tempo scaduto: ultimo giro del leader',2.4,true);}
     ORDER=standings();
     const span=Math.max(1,ORDER.length-1);   // boost proporzionale: 1° 0%, ultimo +14%
@@ -2734,6 +2831,9 @@ const HELP={
     item('Formato','')+[...document.querySelectorAll('[data-cfmt]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Punteggio','')+[...document.querySelectorAll('[data-cpts]')].map(b=>item(txt(b,'b'),'Punti ai primi: '+txt(b,'small'))).join('')}),
   diff:()=>({title:'Difficoltà',html:[...document.querySelectorAll('.opt[data-diff]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
+    item('Si adatta a te','Dopo ogni gara il computer diventa un po’ più forte se vinci più del previsto, un po’ più lento se perdi troppo.')+
+    item('Imparano da soli','Ogni pilota del computer impara ogni pista, curva per curva, separatamente su asciutto, pioggia e ghiaccio: dove esce di strada rallenta, dove va pulito spinge di più. Ogni lunedì si ricomincia da capo.')+
+    item('Fasce di forza','A ogni gara (o campionato) i piloti vengono divisi a caso: 10% top, 20% con qualche difficoltà, 30% e 30% nelle fasce successive.')+
     item('Campionati','La difficoltà si sceglie all’inizio e resta la stessa per tutto il campionato.')}),
   tyres:()=>({title:'Gomme',html:[...document.querySelectorAll('.opt[data-tyre]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Pioggia','Si montano ai box quando il giro è bagnato. Su un giro tutto asciutto si consumano del 40-50%.')+
