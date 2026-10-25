@@ -463,6 +463,14 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
             </div>
           </section>
           <section class="sec">
+            <h2 class="sh">Difficoltà<button class="q" type="button" data-help="diff" aria-label="Informazioni sulla difficoltà">?</button></h2>
+            <div class="opts three" role="group" aria-label="Difficoltà">
+              <button class="opt" data-diff="bronze" aria-pressed="true"><b style="color:#d98c4a">Bronze</b><em class="tag">Avversari alla mano</em><small>Il computer prende le curve con prudenza e il gruppo è sgranato</small></button>
+              <button class="opt" data-diff="silver" aria-pressed="false"><b style="color:#d6dbe6">Silver</b><em class="tag">Più veloci</em><small>Curve più rapide, staccate più decise, gruppo più compatto</small></button>
+              <button class="opt" data-diff="gold" aria-pressed="false"><b style="color:var(--gold)">Gold</b><em class="tag">Al limite</em><small>Il computer guida al limite: anche gli ultimi sono veloci</small></button>
+            </div>
+          </section>
+          <section class="sec">
             <h2 class="sh">Auto<span id="colName">ITA</span></h2>
             <div class="sws" id="sws" role="group" aria-label="Colore della tua auto"></div>
           </section>
@@ -472,9 +480,13 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
 
     <footer class="cta">
       <div class="sum" id="menuSum"></div>
-      <button class="go" id="startBtn">Parti</button>
+      <button class="go" id="startBtn" disabled>Parti</button>
     </footer>
   </div>
+</div>
+
+<div class="overlay" id="loadErr" hidden>
+  <div class="card"><div class="cbody"><h1>Piste mancanti</h1><p></p></div></div>
 </div>
 
 <!-- regole: compaiono solo nella finestra (?) -->
@@ -587,25 +599,37 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
   </div>
 </div>
 
-<!-- ================= PISTE =================
-     Tutto ciò che descrive un circuito sta qui: punti di controllo, traguardo, acqua, zone della safety car e colori.
-     Per aggiungere una pista basta aggiungere un oggetto a questo elenco. -->
-<script type="application/json" id="piste">
-[
- {"id":"valle","name":"Valle","desc":"Laghi e fiume, la classica · ogni guasto neutralizza la gara","engineNeutralize":true,"seed":1983,"forests":14,"trees":1500,"waypoints":[[900,4300],[2000,4420],[3000,4380],[3500,4150],[3800,3800],[4300,3750],[4800,4150],[5400,4300],[6000,3900],[6050,3200],[5700,2800],[5100,2900],[4800,2300],[5300,1900],[5900,1500],[5950,800],[5400,450],[4500,600],[3900,1100],[3300,900],[2700,500],[1900,550],[1500,1100],[2000,1700],[2600,2000],[2700,2700],[2000,3100],[1300,2700],[800,2100],[500,3000],[550,3800]],"finish":[1800,4405],"lakes":[{"x":3450,"y":2950,"rx":460,"ry":280},{"x":850,"y":950,"rx":340,"ry":250}],"river":[[4200,-20],[4150,700],[4350,1300],[4200,1900],[4400,2500],[4300,3200],[4600,3800],[4550,4400],[4650,4820]],"zones":[["Chicane del ponte",4250,3800],["Tornante est",5100,2850],["Ponte nord",4180,880],["Curva del lago",2650,2600]],"colors":{"grass":"#3f7a2a","greens":["#3a7226","#447f2d","#356a24","#4c8a33","#3d7529"],"flowers":["#e8e07a","#f2f2f2"],"sand":"#c9b27a","water":["#2b66a8","#3474b8","#6fa3d8"],"dirt":["#a58a5a","#94784a","#b89c6a"],"trees":[["#295a1e","#3a7c2b","#5a9b3c"]],"pines":[["#1f4a1b","#2e6a28"]],"pineRatio":0.35,"mini":"#2b5a20"}},
- {"id":"costa","name":"Costa","desc":"Veloce, vista mare","seed":2024,"forests":9,"trees":1000,"waypoints":[[800,4250],[1900,4420],[3100,4420],[4300,4300],[5300,3950],[5950,3300],[6000,2500],[5600,1900],[4900,1750],[4400,2150],[3800,2350],[3200,2050],[3000,1400],[3400,800],[2900,450],[2000,500],[1200,700],[700,1300],[500,2200],[800,3000],[500,3700]],"finish":[2300,4420],"lakes":[{"x":3300,"y":3300,"rx":650,"ry":380},{"x":5700,"y":350,"rx":1100,"ry":550,"beach":90}],"river":[],"zones":[["Esse della baia",4400,2150],["Curva del faro",5950,2700],["Tornante nord",3300,800],["Discesa ovest",650,2600]],"colors":{"grass":"#6a9a3c","greens":["#649234","#73a144","#5d8a32","#7ca94b","#6b983b"],"flowers":["#f3e6a0","#ffffff"],"sand":"#e2cf98","water":["#1f6fb0","#2c86c4","#7cc0e6"],"dirt":["#d4bd88","#c4ab76","#e2cf9e"],"trees":[["#3f6e2a","#548c38","#74ab50"]],"pines":[["#2b5c25","#41803a"]],"pineRatio":0.75,"mini":"#4f7a2e"}},
- {"id":"colli","name":"Colli","desc":"Tornanti d’autunno, 3 giri di pioggia sempre","rain":{"fixedLaps":3},"seed":1961,"forests":18,"trees":1800,"waypoints":[[700,4300],[1800,4420],[3100,4380],[3900,4000],[4100,3300],[3600,2900],[3100,3300],[2500,3500],[2000,3100],[2300,2500],[3000,2300],[3800,2200],[4700,2600],[5400,3300],[6000,3000],[6000,2000],[5400,1500],[5900,800],[5300,400],[4300,600],[3700,1200],[2900,1000],[2300,1500],[1600,1100],[900,700],[500,1400],[800,2300],[500,3200],[600,3900]],"finish":[2000,4420],"lakes":[],"river":[[4600,-20],[4550,700],[4700,1400],[4400,2100],[4500,2800],[4900,3600],[5000,4820]],"zones":[["Tornante del mulino",3600,2900],["Ponte dei castagni",4450,2400],["Tornante della vetta",5900,800],["Curva della chiesa",2000,3100]],"colors":{"grass":"#5b7a2c","greens":["#57762a","#647f31","#4f6c27","#6e8936","#5d7b2e"],"flowers":["#e89a3c","#f2e8d0"],"sand":"#b59a6a","water":["#2f6596","#3b77a8","#7aa6cc"],"dirt":["#8f7046","#7d613c","#a3845a"],"trees":[["#7a3a14","#b25e1c","#e09338"],["#6a2216","#a03a1e","#cf6a3c"],["#7d6a12","#b39a1e","#e2c946"],["#2c5a20","#3e7a2c","#5c9a3e"]],"pines":[["#1f4a1b","#2e6a28"]],"pineRatio":0.25,"mini":"#4a6326"}},
- {"id":"capitol","name":"Capitol","desc":"Città, barriere e strade larghe · 2 possibili piogge da 9 giri (50% ciascuna)","seed":753,"width":230,"walls":true,"forests":6,"trees":220,"buildings":750,"rain":{"normal":false,"chance":0.5,"times":2,"laps":9},"zones":[["Curva del Campidoglio",3700,3300],["Ponte nord",4850,700],["Lungotevere",4850,3000],["Viale ovest",700,2000]],"colors":{"grass":"#8f8a80","greens":["#8a857b","#96918a","#858077","#9c968c","#8c877e"],"flowers":["#a39e94","#7d786f"],"sand":"#c9c2b4","water":["#3d6f8c","#4a7f9c","#86b0c8"],"dirt":["#c8c1b3","#bdb6a8","#d3ccbe"],"trees":[["#2f5a28","#437a35","#62994a"]],"pines":[["#24461f","#35632c"]],"pineRatio":0.2,"mini":"#6f6a62","city":true,"roofs":["#b5523b","#c4664a","#a3483a","#8e8a84","#c98a5a","#d1a06a"]},"waypoints":[[1000,4350],[2000,4350],[3200,4350],[3600,4250],[3700,3900],[3700,3300],[3850,3050],[4200,3000],[5000,3000],[5350,2900],[5450,2600],[5450,1900],[5600,1600],[5900,1500],[6000,1200],[5900,900],[5400,700],[4600,700],[4300,800],[4200,1100],[4200,1800],[4050,2050],[3700,2100],[2900,2100],[2600,1950],[2500,1600],[2500,900],[2350,600],[2000,550],[1200,550],[850,700],[700,1000],[700,2500],[750,3200],[1000,3500],[740,3900],[720,4180]],"finish":[1900,4350],"lakes":[],"river":[[4900,-20],[4850,800],[4950,1600],[4800,2400],[4900,3200],[4800,4000],[4900,4820]]},
- {"id":"deserto","name":"Deserto","desc":"Veloce e asciutta: qui non piove mai","seed":1977,"forests":10,"trees":900,"rain":{"none":true},"zones":[["Tornante delle dune",5800,700],["Esse dell’oasi",2600,2600],["Curvone sud",5500,3800],["Canyon",900,1100]],"colors":{"grass":"#d9b77a","greens":["#d2ae70","#e0c088","#cfa766","#e6c994","#d6b47c"],"flowers":["#b08a55","#f0dcae"],"sand":"#e8d2a0","water":["#2f7fa0","#3d93b4","#8cc8dc"],"dirt":["#c49a5e","#b38a52","#d4aa6e"],"trees":[["#3e6b2f","#56873e","#7aa85a"]],"pines":[["#8a7560","#a89078"]],"pineRatio":0.55,"mini":"#b8975e","desert":true},"waypoints":[[700,4300],[2000,4430],[3300,4400],[4500,4200],[5500,3800],[6000,3100],[5900,2300],[5300,1900],[4500,2000],[3900,2600],[3200,2900],[2600,2600],[2700,1900],[3400,1500],[4200,1200],[5200,1100],[5800,700],[5300,350],[4000,400],[2700,500],[1600,600],[900,1100],[700,2000],[1200,2800],[800,3500],[550,3950]],"finish":[2100,4430],"lakes":[{"x":1900,"y":1700,"rx":300,"ry":200}],"river":[]},
- {"id":"campagna","name":"Campagna","desc":"Rettilinei stretti e una piazza grandissima · ogni guasto neutralizza la gara","engineNeutralize":true,"seed":1848,"width":170,"straightWidth":116,"forests":16,"trees":1300,"squares":[{"x":3200,"y":2350,"w":1000,"h":700,"fountain":{"x":3200,"y":2520,"r":60}}],"zones":[["Piazza grande",3200,2300],["Tornante del mulino",5750,750],["Curva del laghetto",5500,2350],["Discesa ovest",600,2200]],"colors":{"grass":"#4f8a34","greens":["#4a8230","#58923a","#8aa04a","#b5a75a","#4c8632","#6c9a3e"],"flowers":["#f2e46a","#ffffff"],"sand":"#c9b27a","water":["#2b66a8","#3474b8","#6fa3d8"],"dirt":["#a58a5a","#94784a","#b89c6a"],"trees":[["#3a5e24","#4f7a30","#6e9a46"],["#4a6a2a","#5f8636","#82a85a"]],"pines":[["#1f3f1a","#2d5a26"]],"pineRatio":0.45,"mini":"#3f6e2a","cobble":["#a8987a","#b8a888","#9a8a6e"]},"waypoints":[[700,4300],[1900,4420],[3100,4420],[4300,4350],[5300,4100],[5900,3500],[5950,2800],[5500,2350],[4700,2450],[4100,2450],[3650,2450],[3200,2200],[2750,2450],[2250,2500],[1800,2100],[1900,1500],[2600,1250],[3600,1300],[4600,1250],[5400,1100],[5750,750],[5300,450],[4200,450],[3000,500],[1800,500],[1000,600],[600,1200],[600,2200],[750,3000],[550,3700]],"finish":[2000,4420],"lakes":[{"x":4300,"y":3300,"rx":420,"ry":260}],"river":[]},
- {"id":"spiaggia","name":"Spiaggia","desc":"Tre isole unite da ponti lunghi e dritti · pioggia dal 5° al 14° giro, doppia dal 7° al 13°, e in Q3 · safety car al 10° giro, per un giro","seed":1969,"forests":8,"trees":650,"engineNeutralize":true,"neutral":{"lap":10},"scLaps":1,"rain":{"normal":false,"fixed":[[5,14],[7,13]],"q3":true},"land":[{"x":1700,"y":2700,"rx":1350,"ry":1700,"beach":120},{"x":5200,"y":3900,"rx":900,"ry":650,"beach":110},{"x":5200,"y":1100,"rx":900,"ry":700,"beach":110}],"squares":[{"x":1600,"y":2620,"w":900,"h":500,"statues":[{"x":1500,"y":2455,"r":34},{"x":1720,"y":2790,"r":34}]}],"waypoints":[[900,3800],[1600,3800],[2400,3800],[3200,3800],[4000,3800],[4700,3800],[5200,4150],[5750,4050],[5650,3600],[5600,3200],[5600,2600],[5600,2000],[5600,1650],[5850,1150],[5600,600],[4900,550],[4650,850],[4500,1200],[4250,1300],[3500,1300],[2700,1300],[2300,1300],[1500,1350],[1000,1750],[850,2300],[1250,2650],[1950,2600],[2550,2750],[2650,3200],[2100,3250],[1300,3200],[750,3450]],"finish":[1600,3800],"lakes":[],"river":[],"zones":[["Ponte lungo",3500,3800],["Ponte nord",5600,2500],["Ponte del ritorno",3400,1300],["Piazza delle statue",1600,2620]],"colors":{"grass":"#8fb35a","greens":["#87ab52","#97bb62","#7fa34a","#a3c26e","#8cb057"],"flowers":["#ffe680","#ffffff"],"sand":"#ecd9a0","water":["#1f78b4","#3a93cc","#8fd3f0"],"dirt":["#d8c38e","#cbb47c","#e2cf9e"],"trees":[["#3f7a2a","#58993a","#7fbf55"]],"pines":[["#2f6a2a","#4a8c3a"]],"pineRatio":0.2,"mini":"#8fb35a","cobble":["#e3d3a8","#efe2bd","#d5c393"]}},
- {"id":"ghiacciaio","name":"Ghiacciaio","desc":"Ghiaccio del nord: aderenza da pioggia su tutto il giro, gomme da pioggia vietate","seed":1952,"forests":16,"trees":1400,"ice":true,"rain":{"none":true},"waypoints":[[800,4250],[2000,4400],[3200,4350],[4200,4100],[4700,3500],[4400,2900],[3700,2700],[3300,2200],[3800,1700],[4700,1800],[5400,2300],[6000,1900],[6000,1100],[5400,500],[4300,500],[3300,700],[2500,1100],[2000,700],[1100,600],[600,1100],[800,1800],[1600,2200],[1700,2900],[900,3200],[550,3700]],"finish":[1900,4390],"lakes":[{"x":2600,"y":3300,"rx":450,"ry":300,"frozen":true},{"x":5600,"y":3600,"rx":380,"ry":260,"frozen":true}],"river":[],"zones":[["Lago gelato",3300,2300],["Tornante del fiordo",5400,500],["Discesa della morena",2000,700],["Curva della slitta",900,3200]],"colors":{"grass":"#e6ecef","greens":["#dfe6ea","#f2f5f7","#d4dde3","#e9eef1","#cdd8df"],"flowers":["#ffffff","#bfcfd9"],"sand":"#c9d6de","water":["#a9cfe3","#c4e0ee","#eef8fc"],"dirt":["#b8c2c8","#a7b2b9","#c9d1d6"],"trees":[["#5a5048","#776a5e","#9a8d80"]],"pines":[["#2a4a3a","#e8f0f4"],["#335a44","#f4f8fa"]],"pineRatio":0.85,"mini":"#7f98a8"}},
- {"id":"isola","name":"Isola","desc":"Ovale con 4 curve a 90°: laguna, bosco, villaggio e faro · 3 piogge possibili (20% ciascuna, 2-5 giri) e con la pioggia entra la safety car","seed":1931,"width":238,"forests":1,"trees":1300,"rain":{"normal":false,"chance":0.2,"times":3,"lapsMin":2,"lapsMax":5,"scOnRain":true},"land":[{"x":3200,"y":2400,"rx":3000,"ry":2100,"beach":120},{"x":1400,"y":1100,"rx":900,"ry":800,"beach":120},{"x":5000,"y":1100,"rx":900,"ry":800,"beach":120},{"x":1400,"y":3700,"rx":900,"ry":800,"beach":120},{"x":5000,"y":3700,"rx":900,"ry":800,"beach":120}],"forestsAt":[[1500,1350,420],[650,650,380],[2000,600,300]],"village":{"x":4550,"y":1350,"r":520,"n":34},"lighthouse":{"x":5600,"y":4200},"dunes":[{"x":4500,"y":3250,"rx":330,"ry":180},{"x":4050,"y":3500,"rx":220,"ry":130}],"waypoints":[[1450,4000],[2200,4000],[3000,4000],[3800,4000],[4950,4000],[5268,3868],[5400,3550],[5400,2950],[5400,2400],[5400,1850],[5400,1250],[5268,932],[4950,800],[4200,800],[3200,800],[2200,800],[1450,800],[1132,932],[1000,1250],[1000,1850],[1000,2400],[1000,2950],[1000,3550],[1132,3868]],"finish":[2600,4000],"lakes":[{"x":1700,"y":3300,"rx":300,"ry":200}],"river":[],"zones":[["Curva della laguna",1132,3868],["Curva del bosco",1132,932],["Curva del villaggio",5268,932],["Curva del faro",5268,3868]],"colors":{"grass":"#5e9a3a","greens":["#58923a","#66a244","#4f8a34","#72aa4c","#5c963c"],"flowers":["#f2e46a","#ffffff"],"sand":"#e8d49a","water":["#1b6fa8","#2f88c2","#86c9ec"],"dirt":["#a58a5a","#94784a","#b89c6a"],"trees":[["#2f6a24","#448a32","#66a84a"]],"pines":[["#1f4a1b","#2e6a28"]],"pineRatio":0.5,"mini":"#4f8a32","roofs":["#c4664a","#e8e4da","#b5523b","#d1a06a","#9fb4c4"]}},
- {"id":"sydney","name":"Sydney","desc":"GP internazionale: il doppio di ogni altra pista, in città sulla baia","special":"sydney","world":[9600,7200],"worldRes":0.375,"seed":1788,"forests":10,"trees":450,"waypoints":[[1200,6600],[3000,6750],[5000,6750],[7000,6650],[8400,6300],[9000,5600],[9100,4600],[8700,3900],[9100,3200],[9000,2200],[8600,1300],[9000,700],[8400,400],[7600,600],[7300,1500],[7400,2600],[6900,3200],[6400,2700],[6500,1500],[6200,700],[5500,500],[4900,900],[4700,2000],[5100,3000],[5000,4200],[4400,4700],[3800,4300],[3900,3000],[3600,2000],[3700,900],[3000,500],[2950,1500],[3150,2600],[2700,3250],[2050,3050],[1750,2300],[1850,1400],[1600,650],[1200,800],[700,1500],[600,2700],[1100,3500],[700,4400],[600,5400],[800,6200]],"finish":[4000,6750],"lakes":[{"x":7000,"y":4900,"rx":1100,"ry":600}],"river":[[2500,-20],[2450,1500],[2650,3200],[2400,4800],[2550,7220]],"zones":[["Curva della baia",8700,3900],["Ponte del porto",2650,3150],["Tornante nord",6400,2700],["Discesa ovest",650,4400],["Esse di Bondi",4700,2000]],"colors":{"grass":"#948f86","greens":["#8f8a80","#9a958c","#8a857c","#a19c93","#918c83"],"flowers":["#a8a39a","#7e7970"],"sand":"#e6d3a0","water":["#1d6aa6","#2a82c0","#7ec4ea"],"dirt":["#cfc8ba","#c3bcae","#d9d2c4"],"trees":[["#3f6a34","#548444","#78a35e"],["#4d6b3c","#64844c","#87a868"]],"pines":[["#2e5a2a","#447a3a"]],"pineRatio":0.15,"mini":"#6f6a62","city":true,"tall":true,"roofs":["#b9c4cc","#93a6b3","#d8d2c4","#c9a27a","#6f7f8a","#a8b8a0","#e2ddd2"]},"buildings":1900,"engineFail":false,"opera":{"x":7000,"y":4120},"rain":{"normal":false,"countMin":0,"countMax":3,"lapsMin":3,"lapsMax":6}}
-]
-</script>
 <script>
+// ================= caricamento delle piste =================
+// Ogni pista è un file a sé: piste/pista1.js, piste/pista2.js, … (numerati di seguito, senza buchi).
+// Le piste finali (come Sydney) stanno a parte: piste/finali/finale1.js, finale2.js, …
+// Ogni file chiama RallyPiste.add({...}); il gioco parte solo se le piste normali sono almeno 9. Formato: piste/README.md
+window.RallyPiste={MIN:9,MAX:99,list:[],add(m){this.list.push(m);}};
 (() => {
+const load=src=>new Promise(ok=>{const el=document.createElement('script'); el.src=src;
+  el.onload=()=>ok(true); el.onerror=()=>{el.remove(); ok(false);}; document.head.appendChild(el);});
+async function scan(prefix){   // carica prefix1.js, prefix2.js, … finché ne trova
+  const out=[];
+  for(let i=1;i<=RallyPiste.MAX;i++){
+    RallyPiste.list=[];
+    if(!await load(prefix+i+'.js')) break;
+    for(const m of RallyPiste.list) if(m&&m.id&&Array.isArray(m.waypoints)&&m.waypoints.length>3) out.push(m);
+  }
+  return out;
+}
+(async()=>{
+  const piste=await scan('piste/pista'), finali=(await scan('piste/finali/finale')).map(m=>Object.assign(m,{final:true}));
+  if(piste.length<RallyPiste.MIN){
+    const e=document.getElementById('loadErr');
+    e.querySelector('p').textContent='Nella cartella “piste” ci sono '+piste.length+' piste valide: ne servono almeno '+RallyPiste.MIN+
+      ' (pista1.js, pista2.js, … numerate senza buchi).';
+    document.getElementById('intro').hidden=true; e.hidden=false; return;
+  }
+  RallyPiste.start(piste.concat(finali));
+  document.dispatchEvent(new Event('rally:ready'));
+})();
+})();
+RallyPiste.start=ALL_MAPS=>{
 "use strict";
 // ================= costanti =================
 let W = 6400, H = 4800, WRES = 0.5;   // dimensione e risoluzione della mappa (cambiano con la pista)
@@ -617,8 +641,9 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const wrapA=a=>{while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;return a;};
 function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
 let R = rng(1);
-const ALL_MAPS = JSON.parse(document.getElementById('piste').textContent);
-const MAPS = ALL_MAPS.filter(m=>!m.special), SYDNEY = ALL_MAPS.find(m=>m.special==='sydney');   // Sydney non è tra le piste normali
+// le piste arrivano dai file della cartella "piste"; le finali (Sydney) non sono tra le piste normali
+const MAPS = ALL_MAPS.filter(m=>!m.final&&!m.special), FINALS = ALL_MAPS.filter(m=>m.final||m.special);
+const SYDNEY = FINALS.find(m=>m.special==='sydney')||FINALS[0]||null;
 // piste di un campionato: "tracks" (id); i campionati salvati prima delle nuove piste usano le 6 originali
 const OLD6=['valle','costa','colli','capitol','deserto','campagna'];
 const chIds=ch=>ch.tracks||OLD6, chLen=ch=>chIds(ch).length;
@@ -629,6 +654,8 @@ const STORE_KEY='rallyPista.v1';
 const SAVE={played:{},records:{},ghosts:{},champ:null,audio:true,track:0};
 try{const s=localStorage.getItem(STORE_KEY); if(s) Object.assign(SAVE,JSON.parse(s));}catch(_){}
 function store(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(_){}}
+// tentativi a Sydney: uno per ogni campionato FIA concluso, accumulabili fino a 3 (i vecchi salvataggi avevano true/false)
+const SYD_MAX=3, sydTries=()=>SAVE.sydney===true?1:clamp(SAVE.sydney|0,0,SYD_MAX);
 
 // ================= tracciato (dipende dalla pista caricata) =================
 let MAP=null, TH=null, T=[], N=0, SEG=null, S=null, L=1, VS=null, NEXTC_D=null, NEXTC_SIDE=null;
@@ -826,7 +853,8 @@ function loadTrack(m){
   LAKES=m.lakes||[]; RIVER=m.river||[]; SQUARES=m.squares||[]; LAND=m.land||[];
   grid=new Array(GW*GH);
   for(const q of SQUARES){ if(q.fountain) gridAdd({x:q.fountain.x,y:q.fountain.y,r:q.fountain.r}); for(const st of q.statues||[]) gridAdd({x:st.x,y:st.y,r:st.r}); }
-  if(m.lighthouse) gridAdd({x:m.lighthouse.x,y:m.lighthouse.y,r:42});
+  for(const o of m.obstacles||[]) gridAdd({x:o.x,y:o.y,r:o.r});   // ostacoli della pista (es. il faro)
+  const inClear=(x,y,pad)=>(m.clear||[]).some(z=>Math.hypot(x-z.x,y-z.y)<z.r+pad);   // zone senza alberi né case
   // traguardo e tribuna
   F=0;{let b=1e15;for(let i=0;i<N;i++){const d=(T[i].x-m.finish[0])**2+(T[i].y-m.finish[1])**2;if(d<b){b=d;F=i;}}}
   fp=T[F];
@@ -876,10 +904,9 @@ function loadTrack(m){
     if(inLake(x,y,45+((LAKES.find(l=>l.beach)||{}).beach||0))||distPoly(x,y,RIVER)<RIVER_HALF+30) continue;
     if(LAND.length&&!inGrass(x,y,25)) continue;
     if(m.dunes&&m.dunes.some(d=>((x-d.x)/(d.rx+30))**2+((y-d.y)/(d.ry+30))**2<1)) continue;
-    if(m.lighthouse&&Math.hypot(x-m.lighthouse.x,y-m.lighthouse.y)<140) continue;
     if(Math.hypot(x-STAND.x,y-STAND.y)<200) continue;
     if(distPoly(x,y,PIT_PTS)<150||inSquare(x,y,190)) continue;
-    if(m.opera&&Math.hypot(x-m.opera.x,y-m.opera.y)<300) continue;
+    if(inClear(x,y,0)) continue;
     let ok=true; gridQuery(x,y,o=>{if((o.x-x)**2+(o.y-y)**2<36*36) ok=false;}); if(!ok) continue;
     {const ns=nearestSeg(x,y,0,N-1); if(ns.d<WD[ns.i]+(m.walls?110:60)) continue;}
     const r=14+R()*10, t={x,y,r:r*0.8,draw:r,type:R()<TH.pineRatio?1:0,pal:pals>1?(R()*pals)|0:0};
@@ -892,7 +919,7 @@ function loadTrack(m){
       const bw=(60+R()*120)*(tall?1.3:1), bh=(60+R()*120)*(tall?1.3:1), x=80+R()*(W-160), y=80+R()*(H-160), rad=Math.hypot(bw,bh)/2;
       if(inLake(x,y,rad+30)||distPoly(x,y,RIVER)<RIVER_HALF+40+rad) continue;
       if(Math.hypot(x-STAND.x,y-STAND.y)<240+rad||distPoly(x,y,PIT_PTS)<170+rad) continue;
-      if(m.opera&&Math.hypot(x-m.opera.x,y-m.opera.y)<260+rad) continue;
+      if(inClear(x,y,rad)) continue;
       const ns=nearestSeg(x,y,0,N-1); if(ns.d<WD[ns.i]+60+rad) continue;
       let ok=true; for(const b of BUILDINGS) if(Math.abs(b.x-x)<(b.w+bw)/2+14&&Math.abs(b.y-y)<(b.h+bh)/2+14){ok=false;break;}
       if(ok) for(const t of trees) if(Math.abs(t.x-x)<bw/2+t.draw&&Math.abs(t.y-y)<bh/2+t.draw){ok=false;break;}
@@ -907,7 +934,7 @@ function loadTrack(m){
       const a=R()*Math.PI*2, dd=Math.sqrt(R())*v.r, x=v.x+Math.cos(a)*dd, y=v.y+Math.sin(a)*dd;
       const bw=60+R()*60, bh=50+R()*50, rad=Math.hypot(bw,bh)/2;
       if(LAND.length&&!inGrass(x,y,rad)) continue;
-      if(inLake(x,y,rad+30)||Math.hypot(x-STAND.x,y-STAND.y)<240+rad||distPoly(x,y,PIT_PTS)<170+rad) continue;
+      if(inLake(x,y,rad+30)||inClear(x,y,rad)||Math.hypot(x-STAND.x,y-STAND.y)<240+rad||distPoly(x,y,PIT_PTS)<170+rad) continue;
       const ns=nearestSeg(x,y,0,N-1); if(ns.d<WD[ns.i]+60+rad) continue;
       let ok=true; for(const b of BUILDINGS) if(Math.abs(b.x-x)<(b.w+bw)/2+16&&Math.abs(b.y-y)<(b.h+bh)/2+16){ok=false;break;}
       if(ok) for(const t of trees) if(Math.abs(t.x-x)<bw/2+t.draw&&Math.abs(t.y-y)<bh/2+t.draw){ok=false;break;}
@@ -1094,24 +1121,8 @@ function drawWorld(){
       w.fillStyle='#5d636a'; w.fillRect(b.x-b.w*0.25,b.y-b.h*0.25,b.w*0.18,b.h*0.18); w.fillRect(b.x+b.w*0.08,b.y+b.h*0.05,b.w*0.14,b.h*0.14);
     }
   }
-  if(MAP.opera){   // Opera House sulla riva della baia
-    const o=MAP.opera; w.save(); w.translate(o.x,o.y);
-    w.fillStyle='rgba(0,0,0,.25)'; w.fillRect(-150+12,-70+14,300,140);
-    w.fillStyle='#d9c7a2'; w.fillRect(-150,-70,300,140);
-    w.fillStyle='#c8b48c'; w.fillRect(-150,50,300,20);
-    for(const [sx,sy,sz] of [[-95,-20,80],[-30,-20,92],[40,-20,80],[-70,35,60],[-10,35,70],[55,35,58]]){
-      w.fillStyle='rgba(0,0,0,.18)'; w.beginPath(); w.moveTo(sx-sz/2+8,sy+sz*0.35+8); w.quadraticCurveTo(sx-sz*0.1+8,sy-sz*0.6+8,sx+sz/2+8,sy-sz*0.2+8); w.lineTo(sx+sz*0.2+8,sy+sz*0.35+8); w.closePath(); w.fill();
-      w.fillStyle='#f6f4ee'; w.beginPath(); w.moveTo(sx-sz/2,sy+sz*0.35); w.quadraticCurveTo(sx-sz*0.1,sy-sz*0.6,sx+sz/2,sy-sz*0.2); w.lineTo(sx+sz*0.2,sy+sz*0.35); w.closePath(); w.fill();
-      w.strokeStyle='#cfcabf'; w.lineWidth=3; w.stroke();
-    }
-    w.restore();
-  }
-  if(MAP.lighthouse){   // faro a strisce, visto dall’alto
-    const o=MAP.lighthouse;
-    w.fillStyle='rgba(0,0,0,.3)'; w.beginPath(); w.arc(o.x+16,o.y+20,46,0,Math.PI*2); w.fill();
-    for(const [r,c] of [[46,'#d8312c'],[38,'#f4f4f0'],[29,'#d8312c'],[20,'#2b2f36'],[13,'#ffe680']]){w.fillStyle=c; w.beginPath(); w.arc(o.x,o.y,r,0,Math.PI*2); w.fill();}
-    w.fillStyle='rgba(255,236,140,.35)'; w.beginPath(); w.moveTo(o.x,o.y); w.arc(o.x,o.y,260,-2.4,-1.9); w.closePath(); w.fill();
-  }
+  // disegni propri della pista (es. Opera House, faro), definiti nel file della pista
+  if(typeof MAP.decor==='function'){ w.save(); try{ MAP.decor(w,{R,colors:TH,map:MAP}); }catch(err){ console.error('Pista '+MAP.id+': errore in decor()',err); } w.restore(); }
   for(const t of trees){w.fillStyle='rgba(0,0,0,.28)';w.beginPath();w.ellipse(t.x+7,t.y+9,t.draw*1.05,t.draw*0.9,0,0,Math.PI*2);w.fill();}
   for(const t of trees){
     const r=t.draw;
@@ -1168,10 +1179,18 @@ function drawMiniBg(){
   g.fillStyle='#111'; g.fillRect(fp.x*MS-1,fp.y*MS-4,3,8);
 }
 
+// difficoltà dei piloti del computer: f va da 0 (il più forte) a 1 (il più lento)
+//   corner: velocità in curva rispetto a quella "sicura" · vtop: velocità massima · dec: staccata
+const DIFFS={
+  bronze:{name:'Bronze',corner:f=>1.00-0.12*f, vtop:f=>0.97-0.07*f, dec:650},
+  silver:{name:'Silver',corner:f=>1.07-0.08*f, vtop:f=>1.00-0.05*f, dec:750},
+  gold:  {name:'Gold',  corner:f=>1.16-0.05*f, vtop:f=>1.03-0.03*f, dec:860}};
+const diffKey=d=>DIFFS[d]?d:'bronze';
+
 // ================= stato della gara =================
 let cars=[], player=null;
 let state='intro', countdown=0, raceTime=0, LAPS=3, MODE_KEY='3', sel=3, tyreSel='hard', colorSel=0, finishCount=0;
-let trackSel=clamp(SAVE.track|0,0,MAPS.length-1), champFmt=9, champCount=9, champPts='storico', CH=null, raceRound=0;
+let diffSel=diffKey(SAVE.diff), trackSel=clamp(SAVE.track|0,0,MAPS.length-1), champFmt=9, champCount=9, champPts='storico', CH=null, raceRound=0;
 let GP=null, SESSION=null;   // Gran Premio: weekend in corso e sessione a tempo (prove libere o qualifiche)
 let scAhead=null;            // auto davanti a te mentre c’è la safety car (per scoprire i sorpassi)
 let TIMED=false, chequered=false, timeUpShown=false;
@@ -1188,7 +1207,7 @@ const cam={x:0,y:0,zoom:1,shake:0};
 let msgT=0;
 let SC=null, redT=0, ORDER=[];
 const POINTS={storico:[10,6,4,3,2,1], moderno:[25,18,15,12,10,8,6,4,2,1]};
-const AI_KEYS=['corner','vtop','softPref','dryEager','pitThr','style','defend'];
+const AI_KEYS=['corner','vtop','softPref','dryEager','pitThr','style','defend','dec'];
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
 const recKey=()=>MAP.id+':'+MODE_KEY;
 const modeName=m=>({time:'Endurance 24 minuti',gp:'Gran Premio','3':'Sprint 3 giri','6':'Principianti 6 giri','9':'Gara 9 giri'})[String(m)]||m+' giri';
@@ -1204,13 +1223,14 @@ function makeCar(id,team,name){
     style:'normale',defend:false,dive:0,tow:0,skid:false,standing:true,fbest:Infinity,slot:0,lapBad:false};
 }
 // piloti: chi corre e con che carattere (nel campionato restano gli stessi per tutte le gare)
-function buildRoster(per,team){
+function buildRoster(per,team,diff=diffSel){
+  const D=DIFFS[diffKey(diff)];
   const r=[{key:'tu',team,name:COLORS[team].name+(per>1?'1':''),player:true}];
   for(let t=0;t<COLORS.length;t++) for(let k=0;k<per;k++){ if(t===team&&k===0) continue;
     const name=COLORS[t].name+(per>1?String(k+1):''); r.push({key:name,team:t,name}); }
   const ais=shuffle(r.slice(1));
   ais.forEach((c,k)=>{const f=k/(ais.length-1), q=Math.random();
-    Object.assign(c,{corner:1.0-0.12*f, vtop:VMAX*(0.97-0.07*f), softPref:Math.random(), dryEager:Math.random()<0.6,
+    Object.assign(c,{corner:D.corner(f), vtop:VMAX*D.vtop(f), dec:D.dec, softPref:Math.random(), dryEager:Math.random()<0.6,
       pitThr:30+Math.random()*50, style:q<0.35?'aggressivo':q<0.7?'paziente':'normale', defend:Math.random()<0.5});});
   return r;
 }
@@ -1333,7 +1353,7 @@ const input={up:false,down:false,left:false,right:false,hb:false};
 const KEYMAP={ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'hb'};
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT'){ if(e.code==='Enter') $('hofSave').click(); return; }   // si sta scrivendo il nome
-  if(!$('hof').hidden&&e.code==='KeyQ'){ e.preventDefault(); startSydney(true); return; }        // debug: Q nella hall of fame avvia Sydney
+  if(!$('hof').hidden&&e.code==='KeyQ'&&SYDNEY){ e.preventDefault(); startSydney(true); return; }        // debug: Q nella hall of fame avvia Sydney
   audioInit();
   if(e.code==='KeyM'&&!e.repeat){toggleAudio();return;}
   if((e.code==='KeyP'||e.code==='Escape')&&!e.repeat){ if(state==='pause') resumeGame(); else pauseGame(); if(state==='pause'||e.code==='KeyP') e.preventDefault(); return; }
@@ -1342,7 +1362,7 @@ addEventListener('keydown',e=>{
     if(document.activeElement&&document.activeElement.tagName==='BUTTON') return;  // Invio e Spazio attivano il pulsante col focus
     e.preventDefault();menuStart();return;}
   if(KEYMAP[e.code]){input[KEYMAP[e.code]]=true;e.preventDefault();}
-  if(e.code==='KeyR'&&state!=='intro'&&!CH&&!GP) startRace();
+  if(e.code==='KeyR'&&!e.repeat&&state!=='intro'&&!CH&&!GP) startRace();
   if(player&&player.pit&&!player.pit.served){const t={Digit1:'soft',Digit2:'hard',Digit3:'wet',Numpad1:'soft',Numpad2:'hard',Numpad3:'wet'}[e.code]; if(t&&(t!=='soft'||player.softLeft>0)&&!(t==='wet'&&MAP.ice)) player.pit.choice=t;}
 });
 addEventListener('keyup',e=>{if(KEYMAP[e.code]) input[KEYMAP[e.code]]=false;});
@@ -1365,7 +1385,9 @@ const $=id=>document.getElementById(id);
 // si sblocca correndo su tutte le piste; chi l’aveva già sbloccato con le prime tre lo tiene
 if(['valle','costa','colli'].every(id=>SAVE.played[id])) SAVE.champOpen=true;
 if(OLD6.every(id=>SAVE.played[id])) SAVE.champOpen=true;   // chi l’aveva sbloccato con le 6 piste originali lo tiene
-const champUnlocked=()=>!!SAVE.champOpen||MAPS.every(m=>SAVE.played[m.id]);
+// sbloccato correndo su 9 piste diverse (con 9 piste: tutte); una volta sbloccato resta tale anche se si aggiungono piste
+const CH_NEED=Math.min(9,MAPS.length);
+const champUnlocked=()=>{ if(!SAVE.champOpen&&MAPS.filter(m=>SAVE.played[m.id]).length>=CH_NEED){SAVE.champOpen=true; store();} return !!SAVE.champOpen; };
 const trackBtns=MAPS.map((m,k)=>{
   const b=document.createElement('button'); b.className='opt'; b.type='button'; b.dataset.track=k;
   const c=document.createElement('canvas'); c.width=120; c.height=90; paintMap(c.getContext('2d'),m,buildTrack(m.waypoints),120/W,2.5);
@@ -1373,6 +1395,7 @@ const trackBtns=MAPS.map((m,k)=>{
   b.insertAdjacentHTML('beforeend','<b>'+m.name+'</b><small>'+m.desc+'</small><small class="rec"></small><small class="ok"></small>');
   $('trackOpts').appendChild(b); return b;
 });
+if(MAPS.length>9) document.querySelector('[data-ccount="9"] small').textContent='9 piste estratte a sorte';
 {const box=$('sws');
   COLORS.forEach((col,k)=>{const b=document.createElement('button'); b.className='sw'; b.type='button';
     b.setAttribute('aria-label',col.full+' ('+col.name+')'); b.title=col.full; b.setAttribute('aria-pressed',k===0?'true':'false');
@@ -1392,6 +1415,7 @@ document.addEventListener('click',e=>{
     press(document.querySelectorAll('[data-laps]'),b);
   } else {
     if(b.dataset.tyre) tyreSel=b.dataset.tyre;
+    if(b.dataset.diff){ diffSel=diffKey(b.dataset.diff); SAVE.diff=diffSel; store(); }
     if(b.dataset.cfmt) champFmt=b.dataset.cfmt==='time'?'time':9;
     if(b.dataset.ccount) champCount=+b.dataset.ccount;
     if(b.dataset.cpts) champPts=b.dataset.cpts;
@@ -1403,20 +1427,21 @@ document.addEventListener('click',e=>{
 function updateMenu(){
   const unlocked=champUnlocked(), played=MAPS.filter(m=>SAVE.played[m.id]).length;
   const cb=$('champBtn'); cb.disabled=!unlocked;
-  $('champLock').textContent=unlocked?'3, 6 o 9 gare: con 9 si corre su tutte le piste, con 3 o 6 le piste sono estratte a sorte'
-    :'Corri su tutte e '+MAPS.length+' le piste per sbloccarlo · '+played+'/'+MAPS.length;
+  $('champLock').textContent=unlocked?(MAPS.length===9?'3, 6 o 9 gare: con 9 si corre su tutte le piste, con 3 o 6 le piste sono estratte a sorte':'3, 6 o 9 gare su piste estratte a sorte tra le '+MAPS.length+' disponibili')
+    :(CH_NEED===MAPS.length?'Corri su tutte e '+MAPS.length+' le piste':'Corri su '+CH_NEED+' piste diverse')+' per sbloccarlo · '+Math.min(played,CH_NEED)+'/'+CH_NEED;
   if(!unlocked&&sel==='champ'){sel=3; press(document.querySelectorAll('[data-laps]'),document.querySelector('[data-laps="3"]'));}
   const fiaOpen=!!SAVE.champDone; $('fiaBtn').disabled=!fiaOpen;
-  $('fiaLock').textContent=fiaOpen?'Sempre 9 Gran Premi, uno su ogni pista · sprint a punteggio FIA storico, gara a punteggio moderno'
+  $('fiaLock').textContent=fiaOpen?'Sempre 9 Gran Premi, '+(MAPS.length===9?'uno su ogni pista':'su 9 piste estratte a sorte')+' · sprint a punteggio FIA storico, gara a punteggio moderno'
     :'Si sblocca concludendo un campionato normale';
   if(!fiaOpen&&sel==='fia'){sel=3; press(document.querySelectorAll('[data-laps]'),document.querySelector('[data-laps="3"]'));}
-  const sydOpen=!!SAVE.sydney; $('sydBtn').disabled=!sydOpen;
-  $('sydLock').textContent=sydOpen?'Un solo tentativo · pista lunga il doppio · sprint 9 giri, gara 40 giri · chi vince entra nella hall of fame'
-    :'Si sblocca concludendo il campionato FIA, e si corre una volta per ogni campionato FIA concluso';
+  const tries=sydTries(), sydOpen=tries>0&&!!SYDNEY; $('sydBtn').disabled=!sydOpen;
+  $('sydLock').textContent=sydOpen?(tries===1?'1 tentativo':tries+' tentativi')+' · pista lunga il doppio · sprint 9 giri, gara 40 giri · chi vince entra nella hall of fame'
+    :'Si sblocca concludendo il campionato FIA: ogni campionato FIA concluso vale un tentativo, fino a '+SYD_MAX;
   if(!sydOpen&&sel==='sydney'){sel=3; press(document.querySelectorAll('[data-laps]'),document.querySelector('[data-laps="3"]'));}
   const champ=sel==='champ', fia=sel==='fia', syd=sel==='sydney';
   $('champOpts').hidden=!champ; $('trackBlock').hidden=champ||fia||syd; $('tyreBlock').hidden=sel==='gp'||fia||syd;
   $('startBtn').textContent=champ?'Inizia il campionato':fia?'Inizia il campionato FIA':sel==='gp'?'Inizia il Gran Premio':syd?'Corri a Sydney':'Parti';
+  press(document.querySelectorAll('[data-diff]'),document.querySelector('[data-diff="'+diffSel+'"]'));
   const mk=String(champ?champFmt:fia?'gp':sel);
   trackBtns.forEach((b,k)=>{const m=MAPS[k], r=SAVE.records[m.id+':'+mk];
     b.querySelector('.rec').textContent=r&&r.lap?'Record '+fmt(r.lap):'Nessun record';
@@ -1424,28 +1449,31 @@ function updateMenu(){
     b.setAttribute('aria-pressed',k===trackSel?'true':'false');});
   const c=SAVE.champ;
   $('champBanner').hidden=!c;
-  if(c) $('cbText').textContent='Campionato in corso ('+modeName(c.fmt)+', FIA '+c.pts+'): gara '+(c.round+1)+' di '+chLen(c)+', '+chMap(c).name+'.';
+  if(c) $('cbText').textContent='Campionato in corso ('+modeName(c.fmt)+', FIA '+c.pts+diffTxt(c)+'): gara '+(c.round+1)+' di '+chLen(c)+', '+chMap(c).name+'.';
   const f=SAVE.fia;
   $('fiaBanner').hidden=!f;
-  if(f) $('fbText').textContent='Campionato FIA in corso: Gran Premio '+(f.round+1)+' di '+chLen(f)+', '+chMap(f).name+'. Il weekend riparte dalle prove libere.';
+  if(f) $('fbText').textContent='Campionato FIA in corso'+(f.diff?' ('+DIFFS[diffKey(f.diff)].name+')':'')+': Gran Premio '+(f.round+1)+' di '+chLen(f)+', '+chMap(f).name+'. Il weekend riparte dalle prove libere.';
 }
+const diffTxt=c=>c.diff?', '+DIFFS[diffKey(c.diff)].name:'';
+// piste di un campionato: tutte se sono esattamente quelle richieste, altrimenti estratte a sorte
+const pickTracks=n=>{const ids=MAPS.map(m=>m.id); return n>=ids.length?ids:shuffle(ids.slice()).slice(0,n);};
 function startSydney(debug){
   GP=null; CH=null; SESSION=null; $('hof').hidden=true;
   startWeekend({map:SYDNEY,sprint:9,final:40,sydney:true,debug});
 }
 function menuStart(){
   GP=null; SESSION=null;
-  if(sel==='sydney'){ if(SAVE.sydney) startSydney(false); return; }
+  if(sel==='sydney'){ if(sydTries()>0&&SYDNEY) startSydney(false); return; }
   if(sel==='fia'){
     if(!SAVE.champDone) return;
-    CH={kind:'fia',fmt:'gp',pts:'FIA',round:0,tracks:MAPS.slice(0,9).map(m=>m.id),roster:buildRoster(2,colorSel),points:{},wins:{},best:{},last:null};   // FIA: sempre 9 gare
+    CH={kind:'fia',fmt:'gp',pts:'FIA',round:0,tracks:pickTracks(9),roster:buildRoster(2,colorSel),diff:diffSel,points:{},wins:{},best:{},last:null};   // FIA: sempre 9 gare
     SAVE.fia=CH; store(); startWeekend(); return;
   }
   if(sel==='gp'){ CH=null; startWeekend(); return; }
   if(sel==='champ'){
     if(!champUnlocked()) return;
-    const ids=MAPS.map(m=>m.id), tracks=champCount>=ids.length?ids:shuffle(ids.slice()).slice(0,champCount);
-    CH={fmt:champFmt,pts:champPts,round:0,tracks,roster:buildRoster(champFmt==='time'?2:1,colorSel),points:{},wins:{},best:{},last:null};
+    const tracks=pickTracks(champCount);
+    CH={fmt:champFmt,pts:champPts,round:0,tracks,roster:buildRoster(champFmt==='time'?2:1,colorSel),diff:diffSel,points:{},wins:{},best:{},last:null};
     SAVE.champ=CH; store();
   } else CH=null;
   startRace();
@@ -1455,7 +1483,7 @@ $('startBtn').addEventListener('click',menuStart);
 function showHof(){
   const list=SAVE.hof||[];
   $('hofList').innerHTML=list.length?list.map((e,i)=>'<li><i style="background:'+COLORS[e.team].body+'"></i>'+(i+1)+'. '+e.name.replace(/[<>&]/g,'')+
-    '<span>'+COLORS[e.team].name+' · '+e.date.split('-').reverse().join('/')+(e.time?' · '+fmt(e.time):'')+'</span></li>').join('')
+    '<span>'+COLORS[e.team].name+(e.diff?' · '+DIFFS[diffKey(e.diff)].name:'')+' · '+e.date.split('-').reverse().join('/')+(e.time?' · '+fmt(e.time):'')+'</span></li>').join('')
     :'<li>Nessun vincitore, per ora.</li>';
   $('intro').hidden=true; $('hof').hidden=false; $('hofBack').focus();
 }
@@ -1463,7 +1491,7 @@ $('hofBtn').addEventListener('click',showHof);
 $('hofBack').addEventListener('click',()=>{$('hof').hidden=true; $('intro').hidden=false;});
 $('hofSave').addEventListener('click',()=>{
   const name=$('hofName').value.trim().slice(0,18)||'Anonimo';
-  (SAVE.hof=SAVE.hof||[]).push({name,team:player.team,date:new Date().toISOString().slice(0,10),time:+player.finishTime.toFixed(2)});
+  (SAVE.hof=SAVE.hof||[]).push({name,team:player.team,diff:diffSel,date:new Date().toISOString().slice(0,10),time:+player.finishTime.toFixed(2)});
   store(); $('hofEntry').hidden=true; $('finText').textContent+=' '+name+' entra nella hall of fame!';
 });
 $('cbGo').addEventListener('click',()=>{GP=null; CH=SAVE.champ; if(CH) startRace();});
@@ -1876,7 +1904,7 @@ function aiControl(c,dt){
   const diff=wrapA(Math.atan2(tp.y-c.y,tp.x-c.x)-c.a);
   ctrl.steer=clamp(diff*2.6,-1,1);
 
-  const rainF=MAP.ice?0.3:c.tyre==='wet'?1-0.7*heavyLevel:1-0.7*rainLevel, dec=c.dive>0?790:650;
+  const rainF=MAP.ice?0.3:c.tyre==='wet'?1-0.7*heavyLevel:1-0.7*rainLevel, dec=(c.dec||650)+(c.dive>0?140:0);
   let target=(c.finished?c.vtop*0.7:c.vtop)*(c.tow?1.06:1);
   let dist=-near.t*SEG[near.i];
   for(let k=0;k<80;k++){
@@ -2105,7 +2133,7 @@ function awardPoints(table=POINTS[CH.pts],endRound=true,resetLast=true){
   });
   CH.last=gained;
   if(endRound) CH.round++;
-  if(CH.kind==='fia'){ SAVE.fia=CH.round<chLen(CH)?CH:null; if(CH.round>=chLen(CH)) SAVE.sydney=true; }   // finito il FIA: un tentativo a Sydney
+  if(CH.kind==='fia'){ SAVE.fia=CH.round<chLen(CH)?CH:null; if(CH.round>=chLen(CH)) SAVE.sydney=Math.min(SYD_MAX,sydTries()+1); }   // finito il FIA: un tentativo in più a Sydney (fino a 3)
   else { SAVE.champ=CH.round<chLen(CH)?CH:null; if(CH.round>=chLen(CH)) SAVE.champDone=true; }   // il campionato FIA si sblocca qui
   store();
 }
@@ -2168,6 +2196,12 @@ function startWeekend(opt={}){
   const map=opt.map||(CH?chMap(CH):MAPS[trackSel]);
   if(!MAP||MAP.id!==map.id) loadTrack(map);
   const roster=CH?CH.roster:buildRoster(2,colorSel);
+  // FIA: i punti della sprint si salvano subito; se il weekend riparte dalle prove libere si torna ai punti di prima della sprint
+  if(CH&&CH.kind==='fia'){
+    if(CH.pre&&CH.pre.round===CH.round){ CH.points={...CH.pre.points}; CH.last=CH.pre.last&&{...CH.pre.last}; }
+    else CH.pre={round:CH.round,points:{...CH.points},last:CH.last&&{...CH.last}};
+    SAVE.fia=CH; store();
+  }
   GP={map,roster,phase:'practice',seg:0,softQ:{},softR:{},active:roster.map(r=>r.key),rank:shuffle(roster.map(r=>r.key)),
       elim:[],qtimes:[],grid:null,tyreNext:'hard',weather:null,next:null,
       sprintLaps:opt.sprint||3,finalLaps:opt.final||15,sydney:!!opt.sydney,debug:!!opt.debug};
@@ -2205,7 +2239,7 @@ function startQuali(){
 }
 function startGpRace(kind){
   GP.phase=kind;
-  if(kind==='final'&&GP.sydney&&!GP.debug){ SAVE.sydney=false; store(); }   // a Sydney si corre una volta sola: il tentativo si usa alla partenza della gara
+  if(kind==='final'&&GP.sydney&&!GP.debug){ SAVE.sydney=Math.max(0,sydTries()-1); store(); }   // il tentativo si usa alla partenza della gara
   beginRace({map:GP.map,laps:kind==='sprint'?GP.sprintLaps:GP.finalLaps,modeKey:'gp',roster:GP.roster,grid:GP.grid,softs:GP.softR,
     extraRain:kind==='sprint'&&GP.wetStart?[{start:-N,end:1.5*N,laps:1.5}]:null,
     tyre:c=>c===player?GP.tyreNext:(raining?'wet':(Math.random()<0.5?'soft':'hard'))});
@@ -2308,7 +2342,7 @@ function gpRaceFinish(){
     list:standingsHTML(true),next:fin?(CH?'Classifica del campionato':null):'Griglia della gara',tyres:null});
   GP.next=fin?(CH?'finalDone':null):'sprintDone';
   if(fin&&!CH&&!GP.sydney){ $('againBtn').hidden=false; $('againBtn').textContent='Nuovo Gran Premio'; }
-  if(fin&&GP.sydney&&!player.out&&player.finishPos===1){   // vittoria a Sydney: nome nella hall of fame
+  if(fin&&GP.sydney&&!GP.debug&&!player.out&&player.finishPos===1){   // vittoria a Sydney: nome nella hall of fame (non con la Q segreta)
     $('hofEntry').hidden=false; $('hofName').value=''; setTimeout(()=>$('hofName').focus(),50);
   }
 }
@@ -2647,8 +2681,9 @@ function frame(t){
   render(); audioFrame(); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+$('startBtn').disabled=false;
 // @debug-hook
-})();
+};
 </script>
 <script>
 /* ================= interfaccia: finestre (?) e riepilogo ================= */
@@ -2672,6 +2707,8 @@ const HELP={
     item('Numero di gare','Il campionato FIA ha sempre 9 gare.')+[...document.querySelectorAll('[data-ccount]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Formato','')+[...document.querySelectorAll('[data-cfmt]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Punteggio','')+[...document.querySelectorAll('[data-cpts]')].map(b=>item(txt(b,'b'),'Punti ai primi: '+txt(b,'small'))).join('')}),
+  diff:()=>({title:'Difficoltà',html:[...document.querySelectorAll('.opt[data-diff]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
+    item('Campionati','La difficoltà si sceglie all’inizio e resta la stessa per tutto il campionato.')}),
   tyres:()=>({title:'Gomme',html:[...document.querySelectorAll('.opt[data-tyre]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Pioggia','Si montano ai box quando il giro è bagnato. Con il sereno si consumano il 40% in più.')+
     item('Set di morbide','Ne hai 2 per gara, compreso quello della partenza.')})
@@ -2702,10 +2739,12 @@ function summary(){
   if(!$('trackBlock').hidden&&track) parts.push('<b>'+esc(txt(track,'b'))+'</b>');
   if(mode) parts.push(esc(txt(mode,'b'))+(mode.querySelector('.tag')?' '+esc(txt(mode,'.tag')):''));
   parts.push(esc($('colName').textContent));
+  const diff=on('.opt[data-diff]'); if(diff) parts.push(esc(txt(diff,'b')));
   if(!$('tyreBlock').hidden&&tyre) parts.push('gomme '+esc(txt(tyre,'b').toLowerCase()));
   $('menuSum').innerHTML=parts.join(', ');
 }
 document.addEventListener('click',()=>setTimeout(summary,0));
+document.addEventListener('rally:ready',summary);   // le piste sono caricate: il menu è completo
 new MutationObserver(()=>{ if(!$('intro').hidden) summary(); }).observe($('intro'),{attributes:true,attributeFilter:['hidden']});
 summary();
 })();
