@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Valle
+// Formula Rally · pista: Valle
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"valle",

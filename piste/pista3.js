@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Colli
+// Formula Rally · pista: Colli
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"colli",

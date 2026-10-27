@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Deserto
+// Formula Rally · pista: Deserto
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"deserto",

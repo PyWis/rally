@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Spiaggia
+// Formula Rally · pista: Spiaggia
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"spiaggia",

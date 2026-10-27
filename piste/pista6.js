@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Campagna
+// Formula Rally · pista: Campagna
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"campagna",

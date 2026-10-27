@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Capitol
+// Formula Rally · pista: Capitol
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"capitol",

@@ -1,6 +1,6 @@
-# Piste di Rally 1976
+# Piste di Formula Rally
 
-Ogni pista è un file JavaScript a sé. Il gioco (`Rally 1976.html`) all'avvio carica in ordine
+Ogni pista è un file JavaScript a sé. Il gioco Formula Rally (`Rally 1976.html`) all'avvio carica in ordine
 `piste/pista1.js`, `piste/pista2.js`, `piste/pista3.js`, … e si ferma al primo numero che non trova.
 Le piste finali (come Sydney) stanno a parte, in `piste/finali/finale1.js`, `finale2.js`, …
 

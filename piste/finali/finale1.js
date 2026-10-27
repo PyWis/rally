@@ -1,4 +1,4 @@
-// Rally 1976 · pista finale: Sydney
+// Formula Rally · pista finale: Sydney
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"sydney",

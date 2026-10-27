@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Isola
+// Formula Rally · pista: Isola
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"isola",

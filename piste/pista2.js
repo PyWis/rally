@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Costa
+// Formula Rally · pista: Costa
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"costa",

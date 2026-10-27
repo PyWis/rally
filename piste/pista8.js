@@ -1,4 +1,4 @@
-// Rally 1976 · pista: Ghiacciaio
+// Formula Rally · pista: Ghiacciaio
 // Formato e campi: vedi piste/README.md
 RallyPiste.add({
   id:"ghiacciaio",

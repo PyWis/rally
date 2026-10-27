@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#14163a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Rally 1976</title>
+<title>Formula Rally</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
@@ -383,8 +383,8 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
     <div class="box strat" id="strat" role="group" aria-label="Strategia dello stint">
       <button type="button" data-st="E" title="Max gomma: −30% usura per 15 s, poi +40%"><kbd>E</kbd>Max</button>
       <button type="button" data-st="X" title="Avviso ai box: rientro obbligato, −1 s di sosta ogni 10 s di preavviso"><kbd>X</kbd>Box</button>
-      <button type="button" data-st="Z" title="Ripulitura gomma: +20% usura per 30 s, poi −40%"><kbd>Z</kbd>Pulisci</button>
-      <button type="button" data-st="Q" title="Stint lungo: usura ferma a +25% per 5 traguardi, poi +30%"><kbd>Q</kbd>Lungo</button>
+      <button type="button" data-st="Z" title="Ripulitura gomma: +20% usura per 30 s, poi −15%"><kbd>Z</kbd>Pulisci</button>
+      <button type="button" data-st="Q" title="Stint lungo: +12% usura subito, poi metà usura per 4 traguardi"><kbd>Q</kbd>Lungo</button>
       <button type="button" data-st="C" title="Stint da qualifica: con le dure nuove metà usura al prossimo traguardo, poi il triplo"><kbd>C</kbd>Quali</button>
     </div>
   </div>
@@ -404,12 +404,13 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
   <p class="t"><span id="ppTitle">Scegli le gomme</span> <span id="ppT"></span></p>
   <div class="b">
     <button data-tyre="soft"><i style="color:#ff5a4f">M</i>Morbide<small id="ppSoft"></small></button>
+    <button data-tyre="medium"><i style="color:#ffd23f">Me</i>Medie</button>
     <button data-tyre="hard"><i>D</i>Dure</button>
     <button data-tyre="wet"><i style="color:#5aa8ff">P</i>Pioggia</button>
   </div>
   <div class="b x" id="ppX">
-    <button data-pp="full"><i>4</i>Riparazione<small>completa · sosta 16 s</small></button>
-    <button data-pp="map"><i>5</i>Mappa motore<small id="ppMap">aggressiva · 1 volta</small></button>
+    <button data-pp="full"><i>5</i>Riparazione<small>completa · sosta 16 s</small></button>
+    <button data-pp="map"><i>6</i>Mappa motore<small id="ppMap">aggressiva · 1 volta</small></button>
   </div>
 </div>
 
@@ -419,7 +420,7 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
     <header class="topbar">
       <div class="logo">
         <div class="mark" aria-hidden="true"></div>
-        <h1>Rally 1976<span>Campionato su sterrato</span></h1>
+        <h1>Formula Rally<span>Campionato su sterrato</span></h1>
       </div>
       <div class="tb">
         <button class="ibtn" id="hofBtn" type="button" aria-label="Hall of fame" title="Hall of fame"><i class="ic ic-cup" style="color:var(--gold)"></i></button>
@@ -481,9 +482,10 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
 
           <section class="sec" id="tyreBlock">
             <h2 class="sh">Gomme in partenza<button class="q" type="button" data-help="tyres" aria-label="Informazioni sulle gomme">?</button></h2>
-            <div class="opts two" role="group" aria-label="Gomme alla partenza">
-              <button class="opt" data-tyre="soft" aria-pressed="false"><b style="color:#ff5a4f">Morbide</b><em class="tag">Più spunto</em><small>+10% accelerazione, usura 10-20% a giro</small></button>
-              <button class="opt" data-tyre="hard" aria-pressed="true"><b>Dure</b><em class="tag">Durano di più</em><small>Usura 5-12% a giro</small></button>
+            <div class="opts three" role="group" aria-label="Gomme alla partenza">
+              <button class="opt" data-tyre="soft" aria-pressed="false"><b style="color:#ff5a4f">Morbide</b><em class="tag">Più spunto</em><small>+10% accelerazione · usura circa 9% a giro guidando pulito, 15% di media</small></button>
+              <button class="opt" data-tyre="medium" aria-pressed="false"><b style="color:#ffd23f">Medie</b><em class="tag">Via di mezzo</em><small>+5% accelerazione · usura circa 7% a giro guidando pulito, 11% di media</small></button>
+              <button class="opt" data-tyre="hard" aria-pressed="true"><b>Dure</b><em class="tag">Durano di più</em><small>Usura circa 5% a giro guidando pulito, 8% di media</small></button>
             </div>
           </section>
           <section class="sec">
@@ -515,14 +517,14 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
 
 <!-- regole: compaiono solo nella finestra (?) -->
 <template id="tplRules">
-  <div class="it"><h3>Danni</h3><p>Ogni urto costa dal 5% al 21%. Sopra il 50% arriva la bandiera arancione: rientra ai box.</p></div>
-  <div class="it"><h3>Gomme</h3><p>Ogni passaggio sul traguardo le consuma: morbide 10-20%, dure 5-12%, da pioggia dal 5% al 50% secondo quanto è bagnato il giro. Hai 2 set di morbide per gara, partenza compresa.</p></div>
+  <div class="it"><h3>Danni</h3><p>Ogni urto costa dal 5% al 15%, secondo la violenza (gli strusciamenti di fianco tra auto 0-1%). Sopra il 50% arriva la bandiera arancione: rientra ai box.</p></div>
+  <div class="it"><h3>Gomme</h3><p>Si consumano mentre guidi e l’usura del giro si conta sul traguardo. Una parte dipende dalla strada percorsa, il resto da come guidi: derapate, freno a mano, bloccaggi in frenata, cordoli, terra ed erba consumano di più. In un giro pulito: morbide circa 9%, medie 7%, dure 5%; in media 15%, 11% e 8%; guidando di traverso anche il doppio. Le gomme da pioggia sull’asciutto si consumano fino a 5 volte di più. Hai 2 set di morbide per gara, partenza compresa; medie e dure senza limiti.</p></div>
   <div class="it"><h3>Box</h3><p>Ti fermi 10 secondi: danni dimezzati e gomme nuove a scelta. Con la riparazione completa i danni si azzerano ma la sosta dura 16 secondi.</p></div>
   <div class="it"><h3>Mappa motore aggressiva</h3><p>Una sola volta per gara, ai box: per 3 giri le dure spingono come le morbide (l’usura resta quella delle dure), ma il rischio di rompere il motore si calcola 4 volte a giro invece di una.</p></div>
-  <div class="it"><h3>Strategie dello stint</h3><p>Una sola per ogni treno di gomme, anche per il computer. Max gomma (E): −30% usura per 15 s, poi +40% rispetto all’inizio; si annulla se entri ai box. Avviso ai box (X): devi rientrare al prossimo passaggio, e ogni 10 s di preavviso tolgono 1 s alla sosta. Ripulitura (Z), stint lungo (Q) e stint da qualifica (C) si usano una sola volta per gara. Ripulitura gomma (Z): +20% usura per 30 s, poi −40% rispetto all’inizio. Stint lungo (Q): usura ferma a +25% per 5 traguardi, poi +30% sul valore di partenza; si annulla se entri ai box. Stint da qualifica (C): con le dure nuove, il prossimo traguardo consuma metà, quello dopo il triplo. Gli effetti non si sommano: il secondo valore sostituisce il primo.</p></div>
+  <div class="it"><h3>Strategie dello stint</h3><p>Una sola per ogni treno di gomme, anche per il computer. Max gomma (E): −30% usura per 15 s, poi +40% rispetto all’inizio; si annulla se entri ai box. Avviso ai box (X): devi rientrare al prossimo passaggio, e ogni 10 s di preavviso tolgono 1 s alla sosta. Ripulitura (Z), stint lungo (Q) e stint da qualifica (C) si usano una sola volta per sessione. Ripulitura gomma (Z): +20% usura per 30 s, poi −15% rispetto all’inizio; se cambi le gomme prima, il −15% è perso. Stint lungo (Q): +12% usura subito, poi i 4 traguardi successivi consumano metà; si annulla se entri ai box. Stint da qualifica (C): con le dure nuove, il prossimo traguardo consuma metà, quello dopo il triplo. Gli effetti non si sommano: il secondo valore sostituisce il primo.</p></div>
   <div class="it"><h3>Safety car</h3><p>Niente sorpassi: chi supera prende lo stop di penalità. Se un’auto ti passa, hai 3 secondi per riprenderti la posizione senza penalità.</p></div>
   <div class="it"><h3>Doppia pioggia</h3><p>Se la seconda pioggia comincia nello stesso giro della prima entra la safety car: finché è in pista si guida anche con le gomme da asciutto, il tempo di rientrare a montare quelle da pioggia.</p></div>
-  <div class="it"><h3>Ammucchiate</h3><p>Se almeno 6 auto si toccano di continuo (21 contatti in 5 secondi), una su due volte una si ritira; in quel caso può entrare la safety car (20%). Dopo un ritiro, nessun altro fino al giro successivo. Non vale nei primi 5 secondi dopo il via.</p></div>
+  <div class="it"><h3>Ammucchiate</h3><p>Se almeno 6 auto si toccano di continuo (21 contatti in 5 secondi), una su due volte un’auto presa a caso subisce il 60% di danni: se arriva al 100% si ritira, e in quel caso può entrare la safety car (20%). Dopo un’ammucchiata, nessun’altra fino al giro successivo. Non vale nei primi 5 secondi dopo il via.</p></div>
   <div class="it"><h3>Bandiera rossa</h3><p>Prima della ripartenza si apre il pannello dei box: puoi cambiare gomme e i danni vengono dimezzati.</p></div>
   <div class="it"><h3>Fantasma</h3><p>Dal secondo giro corri contro il fantasma del tuo giro migliore.</p></div>
   <div class="it keys-desk"><h3>Comandi</h3>
@@ -531,8 +533,8 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
       <li><span><kbd>↓</kbd><kbd>S</kbd></span><span>Frena</span></li>
       <li><span><kbd>←</kbd><kbd>→</kbd><kbd>A</kbd><kbd>D</kbd></span><span>Sterza</span></li>
       <li><span><kbd>Spazio</kbd></span><span>Freno a mano</span></li>
-      <li><span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span>Gomme ai box</span></li>
-      <li><span><kbd>4</kbd><kbd>5</kbd></span><span>Riparazione completa · mappa aggressiva</span></li>
+      <li><span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd></span><span>Gomme ai box: morbide, medie, dure, pioggia</span></li>
+      <li><span><kbd>5</kbd><kbd>6</kbd></span><span>Riparazione completa · mappa aggressiva</span></li>
       <li><span><kbd>E</kbd><kbd>X</kbd><kbd>Z</kbd><kbd>Q</kbd><kbd>C</kbd></span><span>Strategie dello stint</span></li>
       <li><span><kbd>R</kbd></span><span>Ricomincia</span></li>
       <li><span><kbd>P</kbd><kbd>Esc</kbd></span><span>Pausa</span></li>
@@ -573,8 +575,9 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
       </div>
       <div id="gpTyreBox" hidden>
         <p class="lbl">Gomme per la prossima sessione</p>
-        <div class="opts three" role="group" aria-label="Gomme per la prossima sessione">
+        <div class="opts two" role="group" aria-label="Gomme per la prossima sessione">
           <button class="opt" data-gptyre="soft" aria-pressed="false"><b style="color:#ff5a4f">Morbide</b><em class="tag" id="gpSoftLeft"></em></button>
+          <button class="opt" data-gptyre="medium" aria-pressed="false"><b style="color:#ffd23f">Medie</b><em class="tag">Equilibrio</em></button>
           <button class="opt" data-gptyre="hard" aria-pressed="true"><b>Dure</b><em class="tag">Usura bassa</em></button>
           <button class="opt" data-gptyre="wet" aria-pressed="false"><b style="color:#5aa8ff">Pioggia</b><em class="tag">Bagnato</em></button>
         </div>
@@ -764,10 +767,28 @@ const SURF=[
   {drag:3.2,grip:4.4, acc:0.70},
   {drag:7.0,grip:2.0, acc:0.20}];
 const WET=[0.28,0.28,0.4,0.45,1];   // gomme da asciutto sotto la pioggia: grip crollato
+// wear: moltiplicatore dell’usura rispetto alle dure (le da pioggia sull’asciutto fino a 5 volte)
 const TYRES={
-  soft:{name:'Morbide',k:'M',color:'#ff5a4f',acc:1.10,wear:1.10},
-  hard:{name:'Dure',   k:'D',color:'#f3efd8',acc:1.00,wear:1.00},
-  wet: {name:'Pioggia',k:'P',color:'#5aa8ff',acc:1.00,wear:1.00}};   // con il sereno usura +40%
+  soft:  {name:'Morbide',k:'M', color:'#ff5a4f',acc:1.10,wear:1.85},
+  medium:{name:'Medie',  k:'Me',color:'#ffd23f',acc:1.05,wear:1.40},
+  hard:  {name:'Dure',   k:'D', color:'#f3efd8',acc:1.00,wear:1.00},
+  wet:   {name:'Pioggia',k:'P', color:'#5aa8ff',acc:1.00,wear:1.00}};
+// usura delle gomme: una parte di base per la strada percorsa, più quella della guida.
+// Si accumula durante il giro (lapWear) e si paga sul traguardo; i valori sono per le dure, in % di usura
+//   base: per giro · slip: al secondo per ogni unità di velocità laterale oltre 40 · hb: al secondo di freno a mano
+//   lock: al secondo di bloccaggio in frenata · kerb/off: per giro intero su cordolo / su terra ed erba
+//   fg: aderenza del fondo rispetto all’asfalto asciutto: sul bagnato e sul ghiaccio la gomma che slitta si consuma meno
+const WEAR={base:4.0, slip:0.018, hb:2.2, lock:1.2, kerb:5, off:9};
+function tyreWear(c,speed,vl,hb,lock,surf,fg,dt){
+  const lap=speed*dt/L;   // frazione di giro percorsa
+  let w=WEAR.base*lap+WEAR.slip*fg*Math.max(0,Math.abs(vl)-40)*dt;
+  if(hb&&speed>60) w+=WEAR.hb*fg*dt;
+  if(lock) w+=WEAR.lock*dt;
+  if(surf===1) w+=WEAR.kerb*lap; else if(surf===2||surf===3) w+=WEAR.off*lap;
+  let k=TYRES[c.tyre].wear;
+  if(c.tyre==='wet') k*=1+4*(1-rainLevel);   // da pioggia sull’asciutto: fino a 5 volte
+  c.lapWear+=w*k;
+}
 function surfaceAt(x,y,d,i){
   const hw=WD?WD[i]:HALF;
   if(d<hw||inSquare(x,y)) return 0;
@@ -1255,7 +1276,7 @@ function makeCar(id,team,name){
     near:null,off:0,lane:0,laneBase:0,laneTarget:0,laneHold:0,corner:1,vtop:VMAX,stuckT:0,reverseT:0,stuckCount:0,
     pull:Math.random()<0.5?-1:1,wrongT:0,lapStart:0,best:Infinity,lapTimes:[],
     wear:0,flag:false,pit:null,wantPit:false,stops:0,boost:0,pos:0,
-    tyre:'hard',softPref:Math.random(),dryEager:Math.random()<0.6,cross:[0],
+    tyre:'hard',lapWear:0,softPref:Math.random(),dryEager:Math.random()<0.6,cross:[0],
     pitThr:30+Math.random()*50,softLeft:2,
     style:'normale',defend:false,dive:0,tow:0,skid:false,standing:true,fbest:Infinity,slot:0,lapBad:false,
     st:null,stintUsed:false,raceUsed:{},stintT:2+Math.random()*3,emap:0,mapUsed:false,rfChoice:null};
@@ -1368,7 +1389,7 @@ function beginRace(o){
   {const inP=p=>!!p&&leadProg>=p.start&&leadProg<p.end; heavyRain=((inP(rainPlan)?1:0)+trackRain.filter(inP).length)>=2; heavyLevel=heavyRain?1:0;}
   for(const c of cars){
     if(o.softs) c.softLeft=o.softs[c.key]??2;
-    let t=o.tyre?o.tyre(c):(c===player?tyreSel:(Math.random()<0.5?'soft':'hard'));
+    let t=o.tyre?o.tyre(c):(c===player?tyreSel:aiDryTyre());
     if(t==='soft'&&c.softLeft<=0&&!o.keepTyres) t='hard';
     c.tyre=t; if(t==='soft'&&!o.keepTyres) c.softLeft--;        // la partenza usa un set (non se si tengono le gomme montate)
   }
@@ -1402,7 +1423,7 @@ addEventListener('keydown',e=>{
     e.preventDefault();menuStart();return;}
   if(KEYMAP[e.code]){input[KEYMAP[e.code]]=true;e.preventDefault();}
   if(e.code==='KeyR'&&!e.repeat&&state!=='intro'&&!CH&&!GP) startRace();
-  {const t={Digit1:'soft',Digit2:'hard',Digit3:'wet',Digit4:'full',Digit5:'map',Numpad1:'soft',Numpad2:'hard',Numpad3:'wet',Numpad4:'full',Numpad5:'map'}[e.code]; if(t&&!e.repeat) pitPick(t);}
+  {const t={Digit1:'soft',Digit2:'medium',Digit3:'hard',Digit4:'wet',Digit5:'full',Digit6:'map',Numpad1:'soft',Numpad2:'medium',Numpad3:'hard',Numpad4:'wet',Numpad5:'full',Numpad6:'map'}[e.code]; if(t&&!e.repeat) pitPick(t);}
   {const k={KeyE:'E',KeyX:'X',KeyZ:'Z',KeyQ:'Q',KeyC:'C'}[e.code]; if(k&&!e.repeat&&player) useStint(player,k);}
 });
 addEventListener('keyup',e=>{if(KEYMAP[e.code]) input[KEYMAP[e.code]]=false;});
@@ -1669,11 +1690,15 @@ function sfxBeep(freq,dur){
 function hit(c,impact,x,y,side){
   if(c.out||c.hitCd>0||state!=='race'||impact<90) return;
   const pct=side?(Math.random()<0.5?0:1)                      // urto laterale tra auto: 0% o 1%
-               :Math.round(5+16*Math.min(1,(impact-90)/360)); // altrimenti da 5% a 21% secondo la violenza
-  c.dmg=Math.min(100,c.dmg+pct); c.hitCd=0.45;
+               :Math.round(5+10*Math.min(1,(impact-90)/360)); // altrimenti da 5% a 15% secondo la violenza
+  c.hitCd=0.45;
   puff(x??c.x,y??c.y,'#ffd23f',6,170,0.3,4);
+  damage(c,pct);
+}
+function damage(c,pct,msg){
+  c.dmg=Math.min(100,c.dmg+pct);
   if(c===player&&pct>0){
-    cam.shake=Math.max(cam.shake,3+pct/4); showMsg('Danni +'+pct+'%',0.9,true); sfxHit(pct);
+    cam.shake=Math.max(cam.shake,Math.min(12,3+pct/4)); showMsg(msg||'Danni +'+pct+'%',msg?2.2:0.9,true); sfxHit(pct);
     const b=$('dmgBox'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
   }
   if(c.dmg>50&&c.dmg<100&&!c.flag&&!(SESSION&&SESSION.kind==='practice')){   // nelle prove libere niente box
@@ -1750,12 +1775,13 @@ function updatePit(c,dt){
 // gomme nuove: comincia un nuovo stint (si può scegliere di nuovo una strategia)
 function newTyres(c,t){
   if(t==='soft'){ if(c.softLeft>0) c.softLeft--; else t='hard'; }
-  c.tyre=t; c.wear=0; c.st=null; c.stintUsed=false;
+  c.tyre=t; c.wear=0; c.lapWear=0; c.st=null; c.stintUsed=false;
 }
 function aiTyre(c){
   if(raining||rainLevel>0.5) return 'wet';
-  return c.softPref<0.5&&c.softLeft>0?'soft':'hard';
+  return c.softPref<0.35&&c.softLeft>0?'soft':c.softPref<0.7?'medium':'hard';
 }
+const aiDryTyre=()=>{const r=Math.random(); return r<0.35?'soft':r<0.7?'medium':'hard';};
 function pitEntryCheck(c,near){
   if(c.pit||c.out||c.finished||state!=='race') return;
   if(SESSION&&SESSION.kind==='practice') return;   // prove libere: i box sono chiusi
@@ -1768,10 +1794,10 @@ function pitEntryCheck(c,near){
 const STINT={
   E:{name:'Max gomma',info:'usura −30% per 15 s, poi +40%'},
   X:{name:'Avviso ai box',info:'rientra al prossimo passaggio'},
-  Z:{name:'Ripulitura gomma',info:'usura +20% per 30 s, poi −40%'},
-  Q:{name:'Stint lungo',info:'usura ferma a +25% per 5 traguardi, poi +30%'},
+  Z:{name:'Ripulitura gomma',info:'usura +20% per 30 s, poi −15%'},
+  Q:{name:'Stint lungo',info:'usura +12% subito, poi metà usura per 4 traguardi'},
   C:{name:'Stint da qualifica',info:'metà usura al prossimo traguardo, poi il triplo'}};
-const ONCE=['Z','Q','C'];
+const ONCE=['Z','Q','C'];   // una volta per sessione
 const addWear=(c,d)=>{c.wear=Math.min(100,c.wear+d);};   // può andare sotto zero (conta come zero)
 function stintOk(c,k){
   if(!STINT[k]||c.stintUsed||c.pit||c.out||c.gone||c.finished||state!=='race') return false;
@@ -1785,7 +1811,7 @@ function useStint(c,k){
   const st={k,t0:raceTime,done:false};
   if(k==='E') addWear(c,-30);
   else if(k==='Z') addWear(c,20);
-  else if(k==='Q'){ st.n=5; st.start=c.wear; st.base=Math.min(100,c.wear+25); c.wear=st.base; }
+  else if(k==='Q'){ st.n=4; addWear(c,12); }
   else if(k==='C') st.n=2;
   else if(k==='X') c.wantPit=true;
   c.st=st; c.stintUsed=true; c.raceUsed[k]=true;
@@ -1797,11 +1823,11 @@ function stintTick(c){   // effetti a tempo di max gomma e ripulitura
   const st=c.st; if(!st||st.done||c.out) return;
   const el=raceTime-st.t0;
   if(st.k==='E'&&el>=15){ st.done=true; addWear(c,70); if(c===player) showMsg('Max gomma finito: usura +40% (non più −30%)',1.8,true); }
-  if(st.k==='Z'&&el>=30){ st.done=true; addWear(c,-60); if(c===player) showMsg('Gomme ripulite: usura −40% (non più +20%)',1.8,true); }
+  if(st.k==='Z'&&el>=30){ st.done=true; addWear(c,-35); if(c===player) showMsg('Gomme ripulite: usura −15% (non più +20%)',1.8,true); }
 }
 function stintLap(c,tw){   // usura del traguardo con stint lungo e stint da qualifica
   const st=c.st; if(!st||st.done) return tw;
-  if(st.k==='Q'){ c.wear=st.base; if(--st.n>0) return 0; st.done=true; return Math.round(st.start+30-st.base); }   // alla fine: +30 sul valore di partenza, al posto del +25
+  if(st.k==='Q'){ if(--st.n<=0) st.done=true; return Math.round(tw/2); }   // 4 traguardi a metà usura
   if(st.k==='C'){ if(st.n===2){ st.n=1; return Math.round(tw/2); } st.done=true; return tw*3; }
   return tw;
 }
@@ -1813,15 +1839,15 @@ function aiStint(c,dt){
   if(c.tyre==='hard'&&c.wear<=0&&left>=3&&r<0.12) useStint(c,'C');
   else if(!last&&!c.wantPit&&left>=2&&prob>=c.pitThr-12&&r<0.5) useStint(c,'X');      // annuncia la sosta in anticipo
   else if(left<=2&&c.wear>25&&r<0.6) useStint(c,'E');                                   // finale: il +40% non pesa più
-  else if(left>=7&&c.wear>=15&&c.wear<=45&&r<0.12) useStint(c,'Q');
-  else if(left>=4&&c.wear<15&&r<0.08) useStint(c,'Z');
+  else if(left>=5&&(c.tyre==='soft'||c.tyre==='medium')&&c.wear<=40&&r<0.12) useStint(c,'Q');   // conviene con le gomme che si consumano di più
+  else if(left>=4&&c.wear>=10&&c.wear<=45&&r<0.08) useStint(c,'Z');
 }
 function stintStatus(c){
   const st=c.st; if(!st||st.done) return '';
   const el=raceTime-st.t0;
   if(st.k==='E') return 'Max gomma · '+Math.ceil(15-el)+' s';
   if(st.k==='Z') return 'Ripulitura gomma · '+Math.ceil(30-el)+' s';
-  if(st.k==='Q') return 'Stint lungo · '+(st.n>1?st.n+' traguardi':'1 traguardo');
+  if(st.k==='Q') return 'Stint lungo · metà usura · '+(st.n>1?st.n+' traguardi':'1 traguardo');
   if(st.k==='C') return 'Stint da qualifica · '+(st.n===2?'metà usura':'usura tripla');
   if(st.k==='X') return 'Avviso ai box · sosta −'+Math.floor(el/10)+' s';
   return '';
@@ -1895,7 +1921,7 @@ function restartFromGrid(){
   for(const c of order){ c.dmg=Math.round(c.dmg/2); if(c.dmg<=50) c.flag=false; c.wantPit=c.flag; }
   if(floodRestart){
     floodRestart=false; redReason='';
-    for(const c of order){c.tyre='wet'; c.wear=0; c.wantPit=c.flag; c.st=null; c.stintUsed=false;}   // cambio gomme gratuito durante la sospensione
+    for(const c of order){c.tyre='wet'; c.wear=0; c.lapWear=0; c.wantPit=c.flag; c.st=null; c.stintUsed=false;}   // cambio gomme gratuito durante la sospensione
     showMsg('Ripartenza con gomme da pioggia',1.6,true);
   } else {
     // cambio gomme dal pannello dei box: stessa mescola = si tengono quelle montate
@@ -1950,10 +1976,8 @@ function lapCheck(c,near,drive,speed,dt){
     // qualifiche: dopo un giro valido il computer rientra ai box a cambiare le gomme
     if(SESSION&&SESSION.kind==='quali'&&c!==player&&flying&&valid&&!c.finished&&raceTime<SESSION.dur) c.wantPit=true;
     const recTxt=c===player&&!c.finished?onPlayerLap(lt,flying&&valid):'';
-    // usura per giro: morbide 10-20, dure 5-12; da pioggia secondo quanto del giro è stato bagnato
-    const rnd=(a,b)=>a+Math.random()*(b-a), wf=(c.wetT||0)/Math.max(1e-6,c.lapT||0);
-    const tw=stintLap(c,Math.round(c.tyre==='soft'?rnd(10,20):c.tyre==='hard'?rnd(5,12):wf<=0?rnd(40,50):wf<0.5?rnd(10,24):rnd(5,12)));
-    c.lapT=0; c.wetT=0;
+    // usura del giro: quella accumulata guidando (vedi tyreWear), con gli effetti delle strategie
+    const tw=stintLap(c,Math.round(c.lapWear)); c.lapWear=0;
     c.wear=Math.min(100,c.wear+tw);
     let fin=false;
     if(!c.finished){
@@ -2108,7 +2132,6 @@ function physics(c,ctrl,dt){
   if(c.gone) return;
   const drive=state==='race';
   c.hitCd=Math.max(0,c.hitCd-dt);
-  if(drive){c.lapT=(c.lapT||0)+dt; if(raining) c.wetT=(c.wetT||0)+dt;}   // quanta parte del giro è sul bagnato
   const near=nearestTrack(c.x,c.y,c.lastIdx); c.near=near;
   c.skid=false;
   if(c.pit){updatePit(c,dt); lapCheck(c,near,drive,0,dt); return;}
@@ -2156,7 +2179,8 @@ function physics(c,ctrl,dt){
   vf-=(0.45*SF.drag*vf+0.0011*(c.tow?0.85:1)*vf*Math.abs(vf))*dt;
   if(!thr&&!brk) vf-=Math.sign(vf)*Math.min(Math.abs(vf),60*SF.drag*dt);
 
-  let grip=SF.grip*(1-(1-WET[surf])*wetPen)*(1-0.22*prob);
+  const fgrip=1-(1-WET[surf])*wetPen;   // aderenza persa per la pioggia (serve anche all’usura)
+  let grip=SF.grip*fgrip*(1-0.22*prob);
   if(hb){grip=1.4; vf-=Math.sign(vf)*Math.min(Math.abs(vf),200*dt);}
   vl*=Math.exp(-grip*dt);
 
@@ -2198,6 +2222,7 @@ function physics(c,ctrl,dt){
   const rear=[0,1].map(k=>{const s=k?1:-1;return{x:c.x-fx*12-fy*9*s,y:c.y-fy*12+fx*9*s};});
   const skidding=Math.abs(vl)>110||(hb&&speed>60)||(brk&&vf>220);
   c.skid=surf<=1&&skidding;
+  if(drive) tyreWear(c,speed,vl,hb,brk&&vf>220,surf,fgrip,dt);
   const dry=1-0.6*wet;
   let mark=null;
   if(surf<=1&&skidding) mark='rgba(22,22,24,'+(0.32*dry).toFixed(2)+')';
@@ -2246,8 +2271,9 @@ function collideCars(){
 }
 
 // ================= ammucchiate =================
-// almeno 6 auto che si toccano di continuo e almeno 21 contatti: 50% che una si ritiri, e allora 20% di safety car
-const PILE_CARS=6, PILE_HITS=21, PILE_WIN=5;   // contatti contati negli ultimi 5 secondi
+// almeno 6 auto che si toccano di continuo e almeno 21 contatti: 50% che una presa a caso prenda il 60% di danni;
+// se arriva al 100% si ritira, e allora 20% di safety car
+const PILE_CARS=6, PILE_HITS=21, PILE_WIN=5, PILE_DMG=60;   // contatti contati negli ultimi 5 secondi
 function logContact(A,B){
   if(state!=='race'||SESSION||raceTime-goT<5) return;   // non nei primi 5 secondi dopo il via
   const k=Math.min(A.id,B.id)*1000+Math.max(A.id,B.id), t=pairT.get(k);
@@ -2257,7 +2283,7 @@ function logContact(A,B){
 function checkPileup(dt){
   pileT-=dt; if(pileT>0) return; pileT=0.5;
   contacts=contacts.filter(e=>raceTime-e.t<=PILE_WIN);
-  if(leadProg<pileBlock){ contacts=[]; return; }        // dopo un ritiro niente altri ritiri fino al giro successivo
+  if(leadProg<pileBlock){ contacts=[]; return; }        // dopo un’ammucchiata niente altre fino al giro successivo
   if(contacts.length<PILE_HITS) return;
   // gruppi di auto collegate dai contatti
   const up=new Map(), find=c=>{while(up.get(c)!==c) c=up.get(c); return c;};
@@ -2270,9 +2296,11 @@ function checkPileup(dt){
     if(Math.random()>=0.5) continue;
     const pool=[...g.cars].filter(c=>!c.out&&!c.gone&&!c.pit&&!c.finished); if(!pool.length) continue;
     const c=pool[(Math.random()*pool.length)|0];
-    wreck(c); pileBlock=(Math.floor(leadProg/N)+1)*N;   // il giro successivo del primo
-    if(c!==player) showMsg(c.name+' si ritira nell’ammucchiata',2.2,true);
-    if(Math.random()<0.2&&!SC&&!chequered){ c.hold=true; setTimeout(()=>deploySC({name:'ammucchiata'}),1000); }
+    damage(c,PILE_DMG,'Ammucchiata: danni +'+PILE_DMG+'%'); pileBlock=(Math.floor(leadProg/N)+1)*N;   // il giro successivo del primo
+    if(c.out){
+      if(c!==player) showMsg(c.name+' si ritira nell’ammucchiata',2.2,true);
+      if(Math.random()<0.2&&!SC&&!chequered){ c.hold=true; setTimeout(()=>deploySC({name:'ammucchiata'}),1000); }
+    } else if(c!==player) showMsg(c.name+': danni +'+PILE_DMG+'% nell’ammucchiata',2.2,true);
     break;
   }
 }
@@ -2428,7 +2456,7 @@ function startGpRace(kind){
   if(kind==='final'&&GP.sydney&&!GP.debug){ SAVE.sydney=Math.max(0,sydTries()-1); store(); }   // il tentativo si usa alla partenza della gara
   beginRace({map:GP.map,laps:kind==='sprint'?GP.sprintLaps:GP.finalLaps,modeKey:'gp',roster:GP.roster,grid:GP.grid,softs:GP.softR,
     extraRain:kind==='sprint'&&GP.wetStart?[{start:-N,end:1.5*N,laps:1.5}]:null,
-    tyre:c=>c===player?GP.tyreNext:(raining?'wet':(Math.random()<0.5?'soft':'hard'))});
+    tyre:c=>c===player?GP.tyreNext:(raining?'wet':aiDryTyre())});
 }
 function sessionTick(){
   if(SESSION.kind==='practice'){ if(raceTime>=SESSION.dur) endSession(); return; }
@@ -2596,7 +2624,8 @@ function updateHud(dt){
   setText(hud.wx,raining?(heavyRain?'Doppia pioggia':'Pioggia'):MAP.ice?'Ghiaccio':'Sereno'); hud.wx.classList.toggle('rain',raining||!!MAP.ice);
   const fc=raining?null:forecasts.find(f=>f.issued&&!f.done);
   setText(hud.fc,fc?'Previsione: pioggia '+inLaps(fcLaps(fc)):'');
-  hud.wearPct.textContent=Math.round(player.wear)+'%'; hud.wearBar.style.width=player.wear+'%';
+  // usura delle gomme, più quella del giro in corso che si pagherà sul traguardo
+  hud.wearPct.textContent=Math.round(player.wear)+'%'+(player.lapWear>=0.5?' +'+Math.round(player.lapWear):''); hud.wearBar.style.width=player.wear+'%';
   const ty=TYRES[player.tyre]; hud.tyreK.textContent=ty.name; hud.tyreK.style.color=ty.color;
   // pannello dei box: alla sosta, e in bandiera rossa prima della ripartenza (solo gomme)
   const rf=rfPanel(), pp=player.pit, showPanel=rf||!!(pp&&!pp.served&&!pp.penalty);
@@ -2933,8 +2962,9 @@ const HELP={
   diff:()=>({title:'Difficoltà',html:[...document.querySelectorAll('.opt[data-diff]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
     item('Campionati','La difficoltà si sceglie all’inizio e resta la stessa per tutto il campionato.')}),
   tyres:()=>({title:'Gomme',html:[...document.querySelectorAll('.opt[data-tyre]')].map(b=>item(txt(b,'b'),txt(b,'small'))).join('')+
-    item('Pioggia','Si montano ai box quando il giro è bagnato. Con il sereno si consumano il 40% in più.')+
-    item('Set di morbide','Ne hai 2 per gara, compreso quello della partenza.')})
+    item('Pioggia','Si montano ai box quando il giro è bagnato. Con il sereno si consumano fino a 5 volte di più.')+
+    item('Come si consumano','Una parte per la strada percorsa, il resto per come guidi: derapate, freno a mano, bloccaggi, cordoli, terra ed erba.')+
+    item('Set di morbide','Ne hai 2 per gara, compreso quello della partenza. Medie e dure senza limiti.')})
 };
 let lastFocus=null;
 function openHelp(key){
