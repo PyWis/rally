@@ -519,7 +519,7 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
   <div class="it"><h3>Gomme</h3><p>Ogni passaggio sul traguardo le consuma: morbide 10-20%, dure 5-12%, da pioggia dal 5% al 50% secondo quanto è bagnato il giro. Hai 2 set di morbide per gara, partenza compresa.</p></div>
   <div class="it"><h3>Box</h3><p>Ti fermi 10 secondi: danni dimezzati e gomme nuove a scelta. Con la riparazione completa i danni si azzerano ma la sosta dura 16 secondi.</p></div>
   <div class="it"><h3>Mappa motore aggressiva</h3><p>Una sola volta per gara, ai box: per 3 giri le dure spingono come le morbide (l’usura resta quella delle dure), ma il rischio di rompere il motore si calcola 4 volte a giro invece di una.</p></div>
-  <div class="it"><h3>Strategie dello stint</h3><p>Una sola per ogni treno di gomme, anche per il computer. Max gomma (E): −30% usura per 15 s, poi +40%; si annulla se entri ai box. Avviso ai box (X): devi rientrare al prossimo passaggio, e ogni 10 s di preavviso tolgono 1 s alla sosta. Ripulitura gomma (Z): +20% usura per 30 s, poi −40%. Stint lungo (Q): usura ferma a +25% per 5 traguardi, poi un altro +30%; si annulla se entri ai box. Stint da qualifica (C): con le dure nuove, il prossimo traguardo consuma metà, quello dopo il triplo.</p></div>
+  <div class="it"><h3>Strategie dello stint</h3><p>Una sola per ogni treno di gomme, anche per il computer. Max gomma (E): −30% usura per 15 s, poi +40% rispetto all’inizio; si annulla se entri ai box. Avviso ai box (X): devi rientrare al prossimo passaggio, e ogni 10 s di preavviso tolgono 1 s alla sosta. Ripulitura gomma (Z): +20% usura per 30 s, poi −40% rispetto all’inizio. Stint lungo (Q): usura ferma a +25% per 5 traguardi, poi +30% sul valore di partenza; si annulla se entri ai box. Stint da qualifica (C): con le dure nuove, il prossimo traguardo consuma metà, quello dopo il triplo. Gli effetti non si sommano: il secondo valore sostituisce il primo.</p></div>
   <div class="it"><h3>Safety car</h3><p>Niente sorpassi: chi supera prende lo stop di penalità. Se un’auto ti passa, hai 3 secondi per riprenderti la posizione senza penalità.</p></div>
   <div class="it"><h3>Bandiera rossa</h3><p>Prima della ripartenza si apre il pannello dei box: puoi cambiare gomme e i danni vengono dimezzati.</p></div>
   <div class="it"><h3>Fantasma</h3><p>Dal secondo giro corri contro il fantasma del tuo giro migliore.</p></div>
@@ -1778,22 +1778,23 @@ function useStint(c,k){
   const st={k,t0:raceTime,done:false};
   if(k==='E') addWear(c,-30);
   else if(k==='Z') addWear(c,20);
-  else if(k==='Q'){ st.n=5; st.base=Math.min(100,c.wear+25); c.wear=st.base; }
+  else if(k==='Q'){ st.n=5; st.start=c.wear; st.base=Math.min(100,c.wear+25); c.wear=st.base; }
   else if(k==='C') st.n=2;
   else if(k==='X') c.wantPit=true;
   c.st=st; c.stintUsed=true;
   if(c===player) showMsg(STINT[k].name+': '+STINT[k].info,2.2,true);
   return true;
 }
+// gli effetti non si sommano: alla scadenza il secondo valore prende il posto del primo
 function stintTick(c){   // effetti a tempo di max gomma e ripulitura
   const st=c.st; if(!st||st.done||c.out) return;
   const el=raceTime-st.t0;
-  if(st.k==='E'&&el>=15){ st.done=true; addWear(c,40); if(c===player) showMsg('Max gomma finito: usura +40%',1.8,true); }
-  if(st.k==='Z'&&el>=30){ st.done=true; addWear(c,-40); if(c===player) showMsg('Gomme ripulite: usura −40%',1.8,true); }
+  if(st.k==='E'&&el>=15){ st.done=true; addWear(c,70); if(c===player) showMsg('Max gomma finito: usura +40% (non più −30%)',1.8,true); }
+  if(st.k==='Z'&&el>=30){ st.done=true; addWear(c,-60); if(c===player) showMsg('Gomme ripulite: usura −40% (non più +20%)',1.8,true); }
 }
 function stintLap(c,tw){   // usura del traguardo con stint lungo e stint da qualifica
   const st=c.st; if(!st||st.done) return tw;
-  if(st.k==='Q'){ c.wear=st.base; if(--st.n>0) return 0; st.done=true; return 30; }
+  if(st.k==='Q'){ c.wear=st.base; if(--st.n>0) return 0; st.done=true; return Math.round(st.start+30-st.base); }   // alla fine: +30 sul valore di partenza, al posto del +25
   if(st.k==='C'){ if(st.n===2){ st.n=1; return Math.round(tw/2); } st.done=true; return tw*3; }
   return tw;
 }
