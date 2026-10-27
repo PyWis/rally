@@ -521,8 +521,8 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
   <div class="it"><h3>Mappa motore aggressiva</h3><p>Una sola volta per gara, ai box: per 3 giri le dure spingono come le morbide (l’usura resta quella delle dure), ma il rischio di rompere il motore si calcola 4 volte a giro invece di una.</p></div>
   <div class="it"><h3>Strategie dello stint</h3><p>Una sola per ogni treno di gomme, anche per il computer. Max gomma (E): −30% usura per 15 s, poi +40% rispetto all’inizio; si annulla se entri ai box. Avviso ai box (X): devi rientrare al prossimo passaggio, e ogni 10 s di preavviso tolgono 1 s alla sosta. Ripulitura (Z), stint lungo (Q) e stint da qualifica (C) si usano una sola volta per gara. Ripulitura gomma (Z): +20% usura per 30 s, poi −40% rispetto all’inizio. Stint lungo (Q): usura ferma a +25% per 5 traguardi, poi +30% sul valore di partenza; si annulla se entri ai box. Stint da qualifica (C): con le dure nuove, il prossimo traguardo consuma metà, quello dopo il triplo. Gli effetti non si sommano: il secondo valore sostituisce il primo.</p></div>
   <div class="it"><h3>Safety car</h3><p>Niente sorpassi: chi supera prende lo stop di penalità. Se un’auto ti passa, hai 3 secondi per riprenderti la posizione senza penalità.</p></div>
-  <div class="it"><h3>Doppia pioggia</h3><p>Se piove due volte nello stesso giro entra la safety car: finché è in pista si guida anche con le gomme da asciutto, il tempo di rientrare a montare quelle da pioggia.</p></div>
-  <div class="it"><h3>Ammucchiate</h3><p>Se almeno 6 auto si toccano di continuo (21 contatti), una su due volte una si ritira; in quel caso può entrare la safety car (20%). Non vale nei primi 5 secondi dopo il via.</p></div>
+  <div class="it"><h3>Doppia pioggia</h3><p>Se la seconda pioggia comincia nello stesso giro della prima entra la safety car: finché è in pista si guida anche con le gomme da asciutto, il tempo di rientrare a montare quelle da pioggia.</p></div>
+  <div class="it"><h3>Ammucchiate</h3><p>Se almeno 6 auto si toccano di continuo (21 contatti in 5 secondi), una su due volte una si ritira; in quel caso può entrare la safety car (20%). Dopo un ritiro, nessun altro fino al giro successivo. Non vale nei primi 5 secondi dopo il via.</p></div>
   <div class="it"><h3>Bandiera rossa</h3><p>Prima della ripartenza si apre il pannello dei box: puoi cambiare gomme e i danni vengono dimezzati.</p></div>
   <div class="it"><h3>Fantasma</h3><p>Dal secondo giro corri contro il fantasma del tuo giro migliore.</p></div>
   <div class="it keys-desk"><h3>Comandi</h3>
@@ -1234,7 +1234,7 @@ let endT=0, endShown=false, finLive=false, boardT=0, lastBeep=0;
 let rainPlan=null, raining=false, rainLevel=0, forecasts=[], leadProg=0;
 let heavyRain=false, heavyLevel=0;   // doppia pioggia: due piogge attive insieme
 let rainNeutral=false;   // safety car per la doppia pioggia: con gomme da asciutto si guida lo stesso fino al cambio gomme
-let goT=0, contacts=[], pairT=new Map(), pileT=0;   // ammucchiate: contatti tra auto registrati dopo il via
+let goT=0, contacts=[], pairT=new Map(), pileT=0, pileBlock=0;   // ammucchiate: contatti tra auto registrati dopo il via
 let trackRain=[], floodDone=false, floodRestart=false, redReason='';
 let NEUTRAL=null;   // pista con "neutral":"always": safety car o bandiera rossa sicura, a un giro estratto
 let ghostRec=[], ghostAcc=0, raceNewRecord=false;
@@ -1336,7 +1336,7 @@ function beginRace(o){
   SESSION=o.session||null;
   TIMED=o.laps==='time'; LAPS=(TIMED||SESSION)?9999:o.laps; MODE_KEY=o.modeKey; raceRound=CH?CH.round:0;
   chequered=false; timeUpShown=false; SC=null; ORDER=[]; scPassed.clear();
-  rainNeutral=false; goT=0; contacts=[]; pairT.clear(); pileT=0;
+  rainNeutral=false; goT=0; contacts=[]; pairT.clear(); pileT=0; pileBlock=0;
   const roster=o.roster.filter(r=>!o.active||o.active.includes(r.key));
   cars=roster.map((r,id)=>{const c=makeCar(id,r.team,r.name); c.key=r.key; if(!r.player) for(const k of AI_KEYS) c[k]=r[k]; return c;});
   player=cars.find(c=>c.key==='tu')||null;
@@ -2247,7 +2247,7 @@ function collideCars(){
 
 // ================= ammucchiate =================
 // almeno 6 auto che si toccano di continuo e almeno 21 contatti: 50% che una si ritiri, e allora 20% di safety car
-const PILE_CARS=6, PILE_HITS=21, PILE_WIN=8;
+const PILE_CARS=6, PILE_HITS=21, PILE_WIN=5;   // contatti contati negli ultimi 5 secondi
 function logContact(A,B){
   if(state!=='race'||SESSION||raceTime-goT<5) return;   // non nei primi 5 secondi dopo il via
   const k=Math.min(A.id,B.id)*1000+Math.max(A.id,B.id), t=pairT.get(k);
@@ -2257,6 +2257,7 @@ function logContact(A,B){
 function checkPileup(dt){
   pileT-=dt; if(pileT>0) return; pileT=0.5;
   contacts=contacts.filter(e=>raceTime-e.t<=PILE_WIN);
+  if(leadProg<pileBlock){ contacts=[]; return; }        // dopo un ritiro niente altri ritiri fino al giro successivo
   if(contacts.length<PILE_HITS) return;
   // gruppi di auto collegate dai contatti
   const up=new Map(), find=c=>{while(up.get(c)!==c) c=up.get(c); return c;};
@@ -2269,9 +2270,10 @@ function checkPileup(dt){
     if(Math.random()>=0.5) continue;
     const pool=[...g.cars].filter(c=>!c.out&&!c.gone&&!c.pit&&!c.finished); if(!pool.length) continue;
     const c=pool[(Math.random()*pool.length)|0];
-    wreck(c);
+    wreck(c); pileBlock=(Math.floor(leadProg/N)+1)*N;   // il giro successivo del primo
     if(c!==player) showMsg(c.name+' si ritira nell’ammucchiata',2.2,true);
     if(Math.random()<0.2&&!SC&&!chequered){ c.hold=true; setTimeout(()=>deploySC({name:'ammucchiata'}),1000); }
+    break;
   }
 }
 
@@ -2759,8 +2761,10 @@ function update(dt){
       if(now!==raining){raining=now; showMsg(now?(b&&!a?'Inizia a piovere · '+unitTxt(tr.laps):'Inizia a piovere'):'Smette di piovere',2.2,true);
         if(now&&MAP.rain&&MAP.rain.scOnRain&&!SESSION&&!chequered) setTimeout(()=>deploySC({name:'pioggia'}),900);}   // regola della pista: con la pioggia entra la safety car
       if(heavy!==heavyRain){heavyRain=heavy;
-        // seconda pioggia nello stesso giro: entra la safety car e chi ha le gomme da asciutto può guidare fino al cambio gomme
-        if(heavy&&!SESSION&&!chequered){ deploySC({name:'doppia pioggia'}); if(SC){ SC.rain=true; rainNeutral=true; } }
+        // seconda pioggia iniziata nello stesso giro della prima: entra la safety car e chi ha le gomme da asciutto può guidare fino al cambio gomme
+        const lapOf=p=>Math.floor(p.start/N), starts=[a?rainPlan:null,...act].filter(Boolean).map(lapOf);
+        const sameLap=starts.some((l,i)=>starts.indexOf(l)!==i);
+        if(heavy&&sameLap&&!SESSION&&!chequered){ deploySC({name:'doppia pioggia'}); if(SC){ SC.rain=true; rainNeutral=true; } }
         showMsg(heavy?(rainNeutral?'Doppia pioggia! Safety car: rientra a cambiare le gomme':'Doppia pioggia! Con le gomme da asciutto non si sterza'):'La pioggia cala',2.6,true);}
     }
     if(NEUTRAL&&!NEUTRAL.done&&!chequered&&leadProg>=NEUTRAL.at){
