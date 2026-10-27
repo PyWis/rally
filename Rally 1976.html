@@ -131,6 +131,16 @@ canvas#game{position:fixed;inset:0;width:100%;height:100%;display:block;image-re
 #pitPanel button i{font-style:normal;display:block;font-family:var(--px);font-size:14px;margin-bottom:6px}
 #pitPanel button small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 #pitPanel button:disabled{opacity:.35;cursor:not-allowed}
+#pitPanel .b+.b{margin-top:8px}
+#pitPanel .b.x button{flex:1 1 0}
+
+/* strategie dello stint (E X Z Q C) */
+.strat{display:flex;gap:4px;padding:6px;width:214px;pointer-events:auto}
+.strat button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;cursor:pointer;touch-action:manipulation;
+  font-size:11px;line-height:1.1;color:var(--ink);background:var(--night);border:2px solid var(--edge);border-radius:5px}
+.strat kbd{font-family:var(--px);font-size:10px;color:var(--gold)}
+.strat button.on{border-color:var(--gold);background:var(--panel2)}
+.strat button:disabled{opacity:.35;cursor:not-allowed}
 
 /* ================= overlay e schede ================= */
 .overlay{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
@@ -283,6 +293,9 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
   #pitPanel{bottom:calc(env(safe-area-inset-bottom,0px) + 104px);padding:10px}
   #pitPanel button{min-width:72px;padding:8px 10px;font-size:14px}
   #pitPanel button small{display:none}
+  .strat{width:auto;padding:4px;background:rgba(20,22,58,.78)}
+  .strat kbd{display:none}
+  .strat button{font-size:10px;padding:6px 3px}
 
   /* menu a schermo intero */
   .overlay{padding:0}
@@ -367,6 +380,13 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
       <div id="status" role="status"></div>
     </section>
     <ol class="box" id="board"></ol>
+    <div class="box strat" id="strat" role="group" aria-label="Strategia dello stint">
+      <button type="button" data-st="E" title="Max gomma: −30% usura per 15 s, poi +40%"><kbd>E</kbd>Max</button>
+      <button type="button" data-st="X" title="Avviso ai box: rientro obbligato, −1 s di sosta ogni 10 s di preavviso"><kbd>X</kbd>Box</button>
+      <button type="button" data-st="Z" title="Ripulitura gomma: +20% usura per 30 s, poi −40%"><kbd>Z</kbd>Pulisci</button>
+      <button type="button" data-st="Q" title="Stint lungo: usura ferma a +25% per 5 traguardi, poi +30%"><kbd>Q</kbd>Lungo</button>
+      <button type="button" data-st="C" title="Stint da qualifica: con le dure nuove metà usura al prossimo traguardo, poi il triplo"><kbd>C</kbd>Quali</button>
+    </div>
   </div>
   <div class="col r">
     <div class="box speed"><span class="num" id="spd">0</span><span class="unit">km/h</span></div>
@@ -381,11 +401,15 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
 <div id="msg"></div>
 
 <div id="pitPanel" hidden>
-  <p class="t">Scegli le gomme <span id="ppT"></span></p>
+  <p class="t"><span id="ppTitle">Scegli le gomme</span> <span id="ppT"></span></p>
   <div class="b">
     <button data-tyre="soft"><i style="color:#ff5a4f">M</i>Morbide<small id="ppSoft"></small></button>
     <button data-tyre="hard"><i>D</i>Dure</button>
     <button data-tyre="wet"><i style="color:#5aa8ff">P</i>Pioggia</button>
+  </div>
+  <div class="b x" id="ppX">
+    <button data-pp="full"><i>4</i>Riparazione<small>completa · sosta 16 s</small></button>
+    <button data-pp="map"><i>5</i>Mappa motore<small id="ppMap">aggressiva · 1 volta</small></button>
   </div>
 </div>
 
@@ -493,7 +517,11 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
 <template id="tplRules">
   <div class="it"><h3>Danni</h3><p>Ogni urto costa dal 5% al 21%. Sopra il 50% arriva la bandiera arancione: rientra ai box.</p></div>
   <div class="it"><h3>Gomme</h3><p>Ogni passaggio sul traguardo le consuma: morbide 10-20%, dure 5-12%, da pioggia dal 5% al 50% secondo quanto è bagnato il giro. Hai 2 set di morbide per gara, partenza compresa.</p></div>
-  <div class="it"><h3>Box</h3><p>Ti fermi 10 secondi: danni dimezzati e gomme nuove a scelta.</p></div>
+  <div class="it"><h3>Box</h3><p>Ti fermi 10 secondi: danni dimezzati e gomme nuove a scelta. Con la riparazione completa i danni si azzerano ma la sosta dura 16 secondi.</p></div>
+  <div class="it"><h3>Mappa motore aggressiva</h3><p>Una sola volta per gara, ai box: per 3 giri le dure spingono come le morbide (l’usura resta quella delle dure), ma il rischio di rompere il motore si calcola 4 volte a giro invece di una.</p></div>
+  <div class="it"><h3>Strategie dello stint</h3><p>Una sola per ogni treno di gomme, anche per il computer. Max gomma (E): −30% usura per 15 s, poi +40% rispetto all’inizio; si annulla se entri ai box. Avviso ai box (X): devi rientrare al prossimo passaggio, e ogni 10 s di preavviso tolgono 1 s alla sosta. Ripulitura gomma (Z): +20% usura per 30 s, poi −40% rispetto all’inizio. Stint lungo (Q): usura ferma a +25% per 5 traguardi, poi +30% sul valore di partenza; si annulla se entri ai box. Stint da qualifica (C): con le dure nuove, il prossimo traguardo consuma metà, quello dopo il triplo. Gli effetti non si sommano: il secondo valore sostituisce il primo.</p></div>
+  <div class="it"><h3>Safety car</h3><p>Niente sorpassi: chi supera prende lo stop di penalità. Se un’auto ti passa, hai 3 secondi per riprenderti la posizione senza penalità.</p></div>
+  <div class="it"><h3>Bandiera rossa</h3><p>Prima della ripartenza si apre il pannello dei box: puoi cambiare gomme e i danni vengono dimezzati.</p></div>
   <div class="it"><h3>Fantasma</h3><p>Dal secondo giro corri contro il fantasma del tuo giro migliore.</p></div>
   <div class="it keys-desk"><h3>Comandi</h3>
     <ul>
@@ -502,6 +530,8 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
       <li><span><kbd>←</kbd><kbd>→</kbd><kbd>A</kbd><kbd>D</kbd></span><span>Sterza</span></li>
       <li><span><kbd>Spazio</kbd></span><span>Freno a mano</span></li>
       <li><span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span><span>Gomme ai box</span></li>
+      <li><span><kbd>4</kbd><kbd>5</kbd></span><span>Riparazione completa · mappa aggressiva</span></li>
+      <li><span><kbd>E</kbd><kbd>X</kbd><kbd>Z</kbd><kbd>Q</kbd><kbd>C</kbd></span><span>Strategie dello stint</span></li>
       <li><span><kbd>R</kbd></span><span>Ricomincia</span></li>
       <li><span><kbd>P</kbd><kbd>Esc</kbd></span><span>Pausa</span></li>
       <li><span><kbd>M</kbd></span><span>Audio</span></li>
@@ -513,6 +543,7 @@ body:has(#intro:not([hidden])) #touch,body:has(#hof:not([hidden])) #touch{visibi
       <li><span><kbd>▲</kbd></span><span>Accelera</span></li>
       <li><span><kbd>▼</kbd></span><span>Frena</span></li>
       <li><span><kbd>MANO</kbd></span><span>Freno a mano</span></li>
+      <li><span><kbd>MAX</kbd><kbd>BOX</kbd><kbd>…</kbd></span><span>Strategie dello stint</span></li>
     </ul>
   </div>
 </template>
@@ -1193,6 +1224,8 @@ let state='intro', countdown=0, raceTime=0, LAPS=3, MODE_KEY='3', sel=3, tyreSel
 let diffSel=diffKey(SAVE.diff), trackSel=clamp(SAVE.track|0,0,MAPS.length-1), champFmt=9, champCount=9, champPts='storico', CH=null, raceRound=0;
 let GP=null, SESSION=null;   // Gran Premio: weekend in corso e sessione a tempo (prove libere o qualifiche)
 let scAhead=null;            // auto davanti a te mentre c’è la safety car (per scoprire i sorpassi)
+const scPassed=new Map();    // auto che ti hanno passato con la safety car: hai 3 secondi per riprenderti la posizione
+const SC_GRACE=3;
 let TIMED=false, chequered=false, timeUpShown=false;
 const RACE_SECS=24*60, BOOST_MAX=14;   // boost dell’ultimo classificato, qualunque sia il numero di auto
 let endT=0, endShown=false, finLive=false, boardT=0, lastBeep=0;
@@ -1220,7 +1253,8 @@ function makeCar(id,team,name){
     wear:0,flag:false,pit:null,wantPit:false,stops:0,boost:0,pos:0,
     tyre:'hard',softPref:Math.random(),dryEager:Math.random()<0.6,cross:[0],
     pitThr:30+Math.random()*50,softLeft:2,
-    style:'normale',defend:false,dive:0,tow:0,skid:false,standing:true,fbest:Infinity,slot:0,lapBad:false};
+    style:'normale',defend:false,dive:0,tow:0,skid:false,standing:true,fbest:Infinity,slot:0,lapBad:false,
+    st:null,stintUsed:false,stintT:2+Math.random()*3,emap:0,mapUsed:false,rfChoice:null};
 }
 // piloti: chi corre e con che carattere (nel campionato restano gli stessi per tutte le gare)
 function buildRoster(per,team,diff=diffSel){
@@ -1297,7 +1331,7 @@ function beginRace(o){
   if(!MAP||MAP.id!==map.id) loadTrack(map); else resetWorld();
   SESSION=o.session||null;
   TIMED=o.laps==='time'; LAPS=(TIMED||SESSION)?9999:o.laps; MODE_KEY=o.modeKey; raceRound=CH?CH.round:0;
-  chequered=false; timeUpShown=false; SC=null; ORDER=[];
+  chequered=false; timeUpShown=false; SC=null; ORDER=[]; scPassed.clear();
   const roster=o.roster.filter(r=>!o.active||o.active.includes(r.key));
   cars=roster.map((r,id)=>{const c=makeCar(id,r.team,r.name); c.key=r.key; if(!r.player) for(const k of AI_KEYS) c[k]=r[k]; return c;});
   player=cars.find(c=>c.key==='tu')||null;
@@ -1363,7 +1397,8 @@ addEventListener('keydown',e=>{
     e.preventDefault();menuStart();return;}
   if(KEYMAP[e.code]){input[KEYMAP[e.code]]=true;e.preventDefault();}
   if(e.code==='KeyR'&&!e.repeat&&state!=='intro'&&!CH&&!GP) startRace();
-  if(player&&player.pit&&!player.pit.served){const t={Digit1:'soft',Digit2:'hard',Digit3:'wet',Numpad1:'soft',Numpad2:'hard',Numpad3:'wet'}[e.code]; if(t&&(t!=='soft'||player.softLeft>0)&&!(t==='wet'&&MAP.ice)) player.pit.choice=t;}
+  {const t={Digit1:'soft',Digit2:'hard',Digit3:'wet',Digit4:'full',Digit5:'map',Numpad1:'soft',Numpad2:'hard',Numpad3:'wet',Numpad4:'full',Numpad5:'map'}[e.code]; if(t&&!e.repeat) pitPick(t);}
+  {const k={KeyE:'E',KeyX:'X',KeyZ:'Z',KeyQ:'Q',KeyC:'C'}[e.code]; if(k&&!e.repeat&&player) useStint(player,k);}
 });
 addEventListener('keyup',e=>{if(KEYMAP[e.code]) input[KEYMAP[e.code]]=false;});
 addEventListener('blur',()=>{for(const k in input) input[k]=false;});
@@ -1377,8 +1412,22 @@ document.querySelectorAll('#touch button').forEach(b=>{
   b.addEventListener('contextmenu',e=>e.preventDefault());
 });
 document.querySelectorAll('#pitPanel button').forEach(b=>b.addEventListener('pointerdown',e=>{
-  e.preventDefault(); if(player&&player.pit&&!player.pit.served&&(b.dataset.tyre!=='soft'||player.softLeft>0)&&!(b.dataset.tyre==='wet'&&MAP.ice)) player.pit.choice=b.dataset.tyre;
+  e.preventDefault(); pitPick(b.dataset.tyre||b.dataset.pp);
 }));
+document.querySelectorAll('#strat button').forEach(b=>b.addEventListener('pointerdown',e=>{
+  e.preventDefault(); if(player) useStint(player,b.dataset.st);
+}));
+// gomme consentite al pannello dei box (in bandiera rossa si possono tenere le morbide montate anche senza set rimasti)
+const tyreOk=(t,keep)=>(t!=='soft'||player.softLeft>0||(keep&&player.tyre==='soft'))&&!(t==='wet'&&MAP.ice);
+const rfPanel=()=>state==='redflag'&&!floodRestart&&player&&!player.out&&!player.gone&&!player.finished;
+function pitPick(k){
+  if(!player) return;
+  if(rfPanel()){ if(TYRES[k]&&tyreOk(k,true)) player.rfChoice=k; return; }
+  const p=player.pit; if(!p||p.served||p.penalty) return;
+  if(k==='full') p.full=!p.full;
+  else if(k==='map'){ if(!player.mapUsed) p.map=!p.map; }
+  else if(TYRES[k]&&tyreOk(k)) p.choice=k;
+}
 
 // ================= menu =================
 const $=id=>document.getElementById(id);
@@ -1647,38 +1696,56 @@ function enterPit(c,rFrom){
   if(c.pit||c.out||c.finished) return;
   const sIn=PIT.sA+clamp(rFrom??130,0,garageS(c.team)-PIT.sA-40), sG=garageS(c.team), sOut=PIT.sD, move=PIT_TIME-PIT_STOP;
   const t1=move*(sG-sIn)/(sOut-sIn);
-  c.pit={t:0,sIn,sG,sOut,t1,t2:move-t1,served:false,penalty:!!c.penalty,choice:(c.tyre==='soft'&&c.softLeft<=0)?'hard':c.tyre};
+  const pen=!!c.penalty; let red=0;
+  if(c.st&&!c.st.done){
+    if(c.st.k==='X'){ if(!pen) red=Math.floor((raceTime-c.st.t0)/10); c.st.done=true; }   // 1 secondo in meno ogni 10 di preavviso
+    else if(c.st.k==='E'||c.st.k==='Q') c.st.done=true;                                     // max gomma e stint lungo si annullano ai box
+  }
+  // il computer sceglie la riparazione completa quando l’auto è messa male
+  const full=c!==player&&!pen&&c.dmg>=55&&!lastLap(c)&&Math.random()<0.75;
+  c.pit={t:0,sIn,sG,sOut,t1,t2:move-t1,served:false,penalty:pen,red,full,map:false,choice:(c.tyre==='soft'&&c.softLeft<=0)?'hard':c.tyre};
   c.penalty=false;
   c.wantPit=false; c.stops++; c.prevRear=null; c.steer=0; c.lapBad=true;   // il giro in cui si rientra non vale
-  if(c===player) showMsg(c.pit.penalty?'Stop di penalità: 10 secondi':'Ai box: 10 secondi',1.8,true);
+  if(c===player) showMsg(pen?'Stop di penalità: 10 secondi':'Ai box: '+Math.round(pitTotal(c.pit))+' secondi'+(red?' (preavviso −'+red+' s)':''),1.8,true);
 }
+// sosta da fermi: 4 s, 10 s con la riparazione completa, meno il preavviso (almeno 1 s); la penalità resta di 4 s
+const pitStop=p=>p.penalty?PIT_STOP:Math.max(1,(p.full?PIT_STOP+6:PIT_STOP)-p.red);
+const pitTotal=p=>p.t1+pitStop(p)+p.t2;
 function updatePit(c,dt){
   const p=c.pit; p.t+=dt;
+  const stop=pitStop(p);
   let s;
   if(p.t<p.t1) s=p.sIn+(p.sG-p.sIn)*sm(p.t/p.t1);
-  else if(p.t<p.t1+PIT_STOP){
-    s=p.sG; if(Math.random()<0.3) puff(c.x,c.y,'#ffd23f',1,90,0.25,3);
-    if(!p.served&&p.t>p.t1+PIT_STOP-0.5){
+  else if(p.t<p.t1+stop) s=p.sG;
+  else s=p.sG+(p.sOut-p.sG)*sm((p.t-p.t1-stop)/p.t2);
+  if(p.t>=p.t1){
+    if(p.t<p.t1+stop&&Math.random()<0.3) puff(c.x,c.y,'#ffd23f',1,90,0.25,3);
+    if(!p.served&&p.t>p.t1+stop-0.5){
       if(p.penalty){   // stop di penalità: si sta fermi e basta, niente gomme e niente riparazioni
         p.served=true; c.wantPit=false;
         if(c===player) showMsg('Penalità scontata: niente gomme né riparazioni',1.8,true);
       } else {
-      p.served=true; c.dmg=Math.round(c.dmg/2); c.wear=0; c.flag=false; c.wantPit=false;
-      c.tyre=c===player?p.choice:(SESSION&&SESSION.kind==='quali'?aiQualiTyre(c):aiTyre(c));
-      if(c.tyre==='soft'){ if(c.softLeft>0) c.softLeft--; else c.tyre='hard'; }   // massimo 2 set di morbide
-      if(c===player) showMsg('Danni dimezzati, gomme '+TYRES[c.tyre].name.toLowerCase(),1.8,true);
+      p.served=true; c.dmg=p.full?0:Math.round(c.dmg/2); c.flag=false; c.wantPit=false;
+      newTyres(c,c===player?p.choice:(SESSION&&SESSION.kind==='quali'?aiQualiTyre(c):aiTyre(c)));   // massimo 2 set di morbide
+      if(p.map&&!c.mapUsed){ c.mapUsed=true; c.emap=3; engineRoll(c,3); }   // mappa aggressiva: 3 giri, rischio motore ×4 (1 tiro già fatto sul traguardo)
+      if(c===player) showMsg((p.full?'Auto riparata':'Danni dimezzati')+', gomme '+TYRES[c.tyre].name.toLowerCase()+(c.emap>0&&p.map?' · mappa aggressiva':''),1.8,true);
       }
     }
-  } else s=p.sG+(p.sOut-p.sG)*sm((p.t-p.t1-PIT_STOP)/p.t2);
+  }
   const pos=pitPos(s), ah=pitPos(s+4);
   const jx=pos.x-c.x, jy=pos.y-c.y, ok=Math.hypot(jx,jy)<50&&dt>0;
   c.vx=ok?jx/dt:0; c.vy=ok?jy/dt:0;
   c.x=pos.x; c.y=pos.y; c.a=Math.atan2(ah.y-pos.y,ah.x-pos.x);
-  if(p.t>=PIT_TIME){
+  if(p.t>=pitTotal(p)){
     const tp=T[pos.i]; c.a=Math.atan2(tp.ty,tp.tx);
     c.vx=Math.cos(c.a)*200; c.vy=Math.sin(c.a)*200;
     c.pit=null; c.blink=1.0; c.lane=EDGE; c.stuckT=0; c.reverseT=0; c.lapBad=true;   // nemmeno quello di uscita
   }
+}
+// gomme nuove: comincia un nuovo stint (si può scegliere di nuovo una strategia)
+function newTyres(c,t){
+  if(t==='soft'){ if(c.softLeft>0) c.softLeft--; else t='hard'; }
+  c.tyre=t; c.wear=0; c.st=null; c.stintUsed=false;
 }
 function aiTyre(c){
   if(raining||rainLevel>0.5) return 'wet';
@@ -1690,12 +1757,78 @@ function pitEntryCheck(c,near){
   const r=relS(S[near.i]+near.t*SEG[near.i]-PIT.sA);
   if(r<0||r>PIT.sC-PIT.sA) return;
   if(r>50&&near.d>WD[near.i]+20&&onPitLane(c.x,c.y)){enterPit(c,r);return;}
-  if(r>220&&r<300&&(c.flag||c.penalty||(c!==player&&c.wantPit))) enterPit(c,r);
+  if(r>220&&r<300&&(c.flag||c.penalty||(c.st&&c.st.k==='X'&&!c.st.done)||(c!==player&&c.wantPit))) enterPit(c,r);
 }
+// ================= strategie dello stint (una per treno di gomme, anche per il computer) =================
+const STINT={
+  E:{name:'Max gomma',info:'usura −30% per 15 s, poi +40%'},
+  X:{name:'Avviso ai box',info:'rientra al prossimo passaggio'},
+  Z:{name:'Ripulitura gomma',info:'usura +20% per 30 s, poi −40%'},
+  Q:{name:'Stint lungo',info:'usura ferma a +25% per 5 traguardi, poi +30%'},
+  C:{name:'Stint da qualifica',info:'metà usura al prossimo traguardo, poi il triplo'}};
+const addWear=(c,d)=>{c.wear=Math.min(100,c.wear+d);};   // può andare sotto zero (conta come zero)
+function stintOk(c,k){
+  if(!STINT[k]||c.stintUsed||c.pit||c.out||c.gone||c.finished||state!=='race') return false;
+  if(k==='C') return c.tyre==='hard'&&c.wear<=0;                 // solo con le dure nuove
+  if(k==='X') return !(SESSION&&SESSION.kind==='practice');      // prove libere: box chiusi
+  return true;
+}
+function useStint(c,k){
+  if(!stintOk(c,k)) return false;
+  const st={k,t0:raceTime,done:false};
+  if(k==='E') addWear(c,-30);
+  else if(k==='Z') addWear(c,20);
+  else if(k==='Q'){ st.n=5; st.start=c.wear; st.base=Math.min(100,c.wear+25); c.wear=st.base; }
+  else if(k==='C') st.n=2;
+  else if(k==='X') c.wantPit=true;
+  c.st=st; c.stintUsed=true;
+  if(c===player) showMsg(STINT[k].name+': '+STINT[k].info,2.2,true);
+  return true;
+}
+// gli effetti non si sommano: alla scadenza il secondo valore prende il posto del primo
+function stintTick(c){   // effetti a tempo di max gomma e ripulitura
+  const st=c.st; if(!st||st.done||c.out) return;
+  const el=raceTime-st.t0;
+  if(st.k==='E'&&el>=15){ st.done=true; addWear(c,70); if(c===player) showMsg('Max gomma finito: usura +40% (non più −30%)',1.8,true); }
+  if(st.k==='Z'&&el>=30){ st.done=true; addWear(c,-60); if(c===player) showMsg('Gomme ripulite: usura −40% (non più +20%)',1.8,true); }
+}
+function stintLap(c,tw){   // usura del traguardo con stint lungo e stint da qualifica
+  const st=c.st; if(!st||st.done) return tw;
+  if(st.k==='Q'){ c.wear=st.base; if(--st.n>0) return 0; st.done=true; return Math.round(st.start+30-st.base); }   // alla fine: +30 sul valore di partenza, al posto del +25
+  if(st.k==='C'){ if(st.n===2){ st.n=1; return Math.round(tw/2); } st.done=true; return tw*3; }
+  return tw;
+}
+const lapsLeft=c=>SESSION?0:TIMED?Math.max(0,(RACE_SECS-raceTime)/(isFinite(c.best)?c.best:50)):LAPS-c.laps;
+function aiStint(c,dt){
+  if(c.stintUsed||SESSION||c.finished) return;
+  c.stintT-=dt; if(c.stintT>0) return; c.stintT=2+Math.random()*2;
+  const left=lapsLeft(c), last=lastLap(c), prob=Math.min(100,c.dmg+Math.max(0,c.wear)), r=Math.random();
+  if(c.tyre==='hard'&&c.wear<=0&&left>=3&&r<0.12) useStint(c,'C');
+  else if(!last&&!c.wantPit&&left>=2&&prob>=c.pitThr-12&&r<0.5) useStint(c,'X');      // annuncia la sosta in anticipo
+  else if(left<=2&&c.wear>25&&r<0.6) useStint(c,'E');                                   // finale: il +40% non pesa più
+  else if(left>=7&&c.wear>=15&&c.wear<=45&&r<0.12) useStint(c,'Q');
+  else if(left>=4&&c.wear<15&&r<0.08) useStint(c,'Z');
+}
+function stintStatus(c){
+  const st=c.st; if(!st||st.done) return '';
+  const el=raceTime-st.t0;
+  if(st.k==='E') return 'Max gomma · '+Math.ceil(15-el)+' s';
+  if(st.k==='Z') return 'Ripulitura gomma · '+Math.ceil(30-el)+' s';
+  if(st.k==='Q') return 'Stint lungo · '+(st.n>1?st.n+' traguardi':'1 traguardo');
+  if(st.k==='C') return 'Stint da qualifica · '+(st.n===2?'metà usura':'usura tripla');
+  if(st.k==='X') return 'Avviso ai box · sosta −'+Math.floor(el/10)+' s';
+  return '';
+}
+
 // ================= motore rotto, safety car, bandiera rossa (solo 24 minuti) =================
 const ENGINE_P=1/200, SC_SPEED=260;
 const engineOn=()=>!(MAP&&MAP.engineFail===false)&&(TIMED||!!(GP&&GP.phase==='final'&&!SESSION));   // guasti: Endurance e gara lunga del GP, se la pista li prevede
 const carS=c=>c.near?S[c.near.i]+c.near.t*SEG[c.near.i]:0;
+// tiri per il guasto al motore nel giro che comincia; con la mappa aggressiva vale anche fuori dall’Endurance
+function engineRoll(c,n){
+  if(!(engineOn()||(c.emap>0&&!SESSION&&!(MAP&&MAP.engineFail===false)))) return;
+  for(let k=0;k<n&&c.engineAt==null;k++) if(Math.random()<ENGINE_P) c.engineAt=(0.1+Math.random()*0.85)*N;
+}
 function engineFail(c){
   c.out=true; c.outT=0; c.engine=true; c.pit=null;
   puff(c.x,c.y,'#555',16,90,1.4,10);
@@ -1730,8 +1863,9 @@ function endSC(){
 function redFlag(z){
   if(state==='pause'){setTimeout(()=>redFlag(z),500);return;}
   if(state!=='race'||chequered) return;
-  SC=null; state='redflag'; redT=4; redReason='';
-  showMsg('Bandiera rossa · '+z.name,3.5,true);
+  SC=null; state='redflag'; redT=8; redReason='';   // il tempo per scegliere le gomme al pannello dei box
+  if(player) player.rfChoice=player.tyre;
+  showMsg('Bandiera rossa · '+z.name+' · scegli le gomme',3.5,true);
 }
 // le due piogge insieme: pista allagata, bandiera rossa.
 // La pioggia normale si esaurisce, resta quella fissa della pista; si riparte dalla griglia con gomme da pioggia.
@@ -1750,10 +1884,20 @@ function restartFromGrid(){
     Object.assign(c,{vx:0,vy:0,steer:0,pit:null,sink:0,blink:0,prevRear:null,wrongT:0,stuckT:0,reverseT:0,stuckCount:0,lapStart:raceTime,standing:true});
   });
   ghostRec=[]; ghostAcc=0; lastBeep=0;
+  // durante la sospensione l’auto viene riparata (danni dimezzati)
+  for(const c of order){ c.dmg=Math.round(c.dmg/2); if(c.dmg<=50) c.flag=false; c.wantPit=c.flag; }
   if(floodRestart){
     floodRestart=false; redReason='';
-    for(const c of order){c.tyre='wet'; c.wear=0; c.wantPit=false;}   // cambio gomme gratuito durante la sospensione
+    for(const c of order){c.tyre='wet'; c.wear=0; c.wantPit=c.flag; c.st=null; c.stintUsed=false;}   // cambio gomme gratuito durante la sospensione
     showMsg('Ripartenza con gomme da pioggia',1.6,true);
+  } else {
+    // cambio gomme dal pannello dei box: stessa mescola = si tengono quelle montate
+    for(const c of order){
+      const t=c===player?(c.rfChoice||c.tyre):aiTyre(c);
+      if(t!==c.tyre||(c!==player&&c.wear>35&&(t!=='soft'||c.softLeft>0))) newTyres(c,t);
+      c.rfChoice=null;
+    }
+    if(player&&order.includes(player)) showMsg('Danni dimezzati · gomme '+TYRES[player.tyre].name.toLowerCase(),1.6,true);
   }
   state='countdown'; countdown=3;
   if(player&&!player.out) {cam.x=player.x; cam.y=player.y;}
@@ -1801,7 +1945,7 @@ function lapCheck(c,near,drive,speed,dt){
     const recTxt=c===player&&!c.finished?onPlayerLap(lt,flying&&valid):'';
     // usura per giro: morbide 10-20, dure 5-12; da pioggia secondo quanto del giro è stato bagnato
     const rnd=(a,b)=>a+Math.random()*(b-a), wf=(c.wetT||0)/Math.max(1e-6,c.lapT||0);
-    const tw=Math.round(c.tyre==='soft'?rnd(10,20):c.tyre==='hard'?rnd(5,12):wf<=0?rnd(40,50):wf<0.5?rnd(10,24):rnd(5,12));
+    const tw=stintLap(c,Math.round(c.tyre==='soft'?rnd(10,20):c.tyre==='hard'?rnd(5,12):wf<=0?rnd(40,50):wf<0.5?rnd(10,24):rnd(5,12)));
     c.lapT=0; c.wetT=0;
     c.wear=Math.min(100,c.wear+tw);
     let fin=false;
@@ -1814,7 +1958,8 @@ function lapCheck(c,near,drive,speed,dt){
         if(c!==player&&!player.finished&&!player.out) showMsg('Bandiera a scacchi!',2.2,true);
       }
     }
-    if(engineOn()&&!fin&&!c.finished&&Math.random()<ENGINE_P) c.engineAt=(0.1+Math.random()*0.85)*N;
+    if(c.emap>0) c.emap--;                                     // la mappa aggressiva dura 3 giri
+    if(!fin&&!c.finished) engineRoll(c,c.emap>0?4:1);          // con la mappa il rischio si calcola 4 volte
     if(fin){
       c.finished=true; c.finishTime=raceTime; c.finishPos=++finishCount; c.flag=false; c.wantPit=false;
       if(c===player&&SESSION) showMsg('Sessione conclusa · '+fmt(c.fbest),2.2,true);
@@ -1854,6 +1999,7 @@ function aiControl(c,dt){
       if(raining&&rainLevel>0.3&&c.tyre!=='wet') c.wantPit=true;
       if(!raining&&rainLevel<0.15&&c.tyre==='wet'&&c.dryEager) c.wantPit=true;
     }
+    aiStint(c,dt);
   }
   const near=c.near, fx=Math.cos(c.a), fy=Math.sin(c.a);
   const sp=Math.hypot(c.vx,c.vy), vf=c.vx*fx+c.vy*fy;
@@ -1989,7 +2135,7 @@ function physics(c,ctrl,dt){
   // aderenza: asciutto normale · pioggia: gomme da asciutto basse, da pioggia quasi normali · doppia pioggia: da pioggia basse
   const wetPen=MAP.ice?1:c.tyre==='wet'?0.13*rainLevel+0.87*heavyLevel:rainLevel;   // ghiaccio: sempre come la pioggia con gomme da asciutto
   const prob=Math.min(100,c.dmg+Math.max(0,c.wear))/100;   // l’usura sotto zero conta come zero
-  const power=(1-0.5*prob)*(1+c.boost/100)*TYRES[c.tyre].acc;
+  const power=(1-0.5*prob)*(1+c.boost/100)*(c.emap>0&&c.tyre==='hard'?TYRES.soft.acc:TYRES[c.tyre].acc);   // mappa aggressiva: dure come morbide
   const thr=drive?ctrl.thr:0, brk=drive&&ctrl.brk, hb=drive&&ctrl.hb;
 
   let steerT=ctrl.steer; if(prob>0.4&&Math.abs(vf)>60) steerT=clamp(steerT+c.pull*(prob-0.4)/0.6*0.18,-1,1);
@@ -2379,12 +2525,13 @@ function resize(){
 }
 addEventListener('resize',resize); resize();
 
-const hud={trk:$('trk'),pos:$('pos'),lap:$('lap'),time:$('time'),best:$('best'),rec:$('rec'),spd:$('spd'),dmgPct:$('dmgPct'),dmgBar:$('dmgBar'),wx:$('wx'),fc:$('fc'),board:$('board'),wearPct:$('wearPct'),wearBar:$('wearBar'),status:$('status'),tyreK:$('tyreK'),pitPanel:$('pitPanel'),ppT:$('ppT')};
+const hud={trk:$('trk'),pos:$('pos'),lap:$('lap'),time:$('time'),best:$('best'),rec:$('rec'),spd:$('spd'),dmgPct:$('dmgPct'),dmgBar:$('dmgBar'),wx:$('wx'),fc:$('fc'),board:$('board'),wearPct:$('wearPct'),wearBar:$('wearBar'),status:$('status'),tyreK:$('tyreK'),pitPanel:$('pitPanel'),ppT:$('ppT'),strat:[...document.querySelectorAll('#strat button')]};
 const unitTxt=k=>SESSION&&SESSION.kind==='quali'?(k>1?k+' minuti':'1 minuto'):(k>1?k+' giri':'1 giro');
 const inLaps=k=>'tra '+unitTxt(k);
 const fcLaps=f=>Math.max(1,Math.ceil((f.rainAt-leadProg)/N));
 function setText(el,v){if(el._v!==v){el.textContent=v;el._v=v;}}
 function updateHud(dt){
+  if($('strat').hidden===!!player) $('strat').hidden=!player;
   if(!player){
     if(SESSION&&state==='race'){ setText(hud.trk,MAP.name+' · '+phaseLabel()+' · '+sessionClock()); boardT-=dt; if(boardT<=0){boardT=0.25; hud.board.innerHTML=sessionBoardHTML();} }
     return;
@@ -2411,22 +2558,40 @@ function updateHud(dt){
   setText(hud.fc,fc?'Previsione: pioggia '+inLaps(fcLaps(fc)):'');
   hud.wearPct.textContent=Math.round(player.wear)+'%'; hud.wearBar.style.width=player.wear+'%';
   const ty=TYRES[player.tyre]; hud.tyreK.textContent=ty.name; hud.tyreK.style.color=ty.color;
-  const pp=player.pit, showPanel=!!(pp&&!pp.served&&!pp.penalty);
+  // pannello dei box: alla sosta, e in bandiera rossa prima della ripartenza (solo gomme)
+  const rf=rfPanel(), pp=player.pit, showPanel=rf||!!(pp&&!pp.served&&!pp.penalty);
   if(hud.pitPanel.hidden===showPanel) hud.pitPanel.hidden=!showPanel;
   if(showPanel){
-    hud.ppT.textContent=Math.max(0,pp.t1+PIT_STOP-0.5-pp.t).toFixed(1)+' s';
-    hud.pitPanel.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.tyre===pp.choice?'true':'false');
-      if(b.dataset.tyre==='soft') b.disabled=player.softLeft<=0; if(b.dataset.tyre==='wet') b.disabled=!!MAP.ice;});
-    const sl=player.softLeft; $('ppSoft').textContent=sl>0?(sl===1?'1 set rimasto':sl+' set rimasti'):'finite';
+    const choice=rf?(player.rfChoice||player.tyre):pp.choice;
+    setText($('ppTitle'),rf?'Bandiera rossa: scegli le gomme':'Scegli le gomme');
+    hud.ppT.textContent=Math.max(0,rf?redT:pp.t1+pitStop(pp)-0.5-pp.t).toFixed(1)+' s';
+    hud.pitPanel.querySelectorAll('button[data-tyre]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.tyre===choice?'true':'false'); b.disabled=!tyreOk(b.dataset.tyre,rf);});
+    const sl=player.softLeft; $('ppSoft').textContent=rf&&player.tyre==='soft'?'tieni le montate':sl>0?(sl===1?'1 set rimasto':sl+' set rimasti'):'finite';
+    if($('ppX').hidden!==rf) $('ppX').hidden=rf;
+    if(!rf){
+      const bf=hud.pitPanel.querySelector('[data-pp="full"]'), bm=hud.pitPanel.querySelector('[data-pp="map"]');
+      bf.setAttribute('aria-pressed',pp.full?'true':'false');
+      bm.setAttribute('aria-pressed',pp.map?'true':'false'); bm.disabled=player.mapUsed;
+      setText($('ppMap'),player.mapUsed?'già usata':'aggressiva · 1 volta');
+    }
+  }
+  // pulsanti delle strategie
+  for(const b of hud.strat){
+    const k=b.dataset.st, on=!!(player.st&&player.st.k===k&&!player.st.done), dis=!stintOk(player,k);
+    if(b.disabled!==dis) b.disabled=dis;
+    b.classList.toggle('on',on);
   }
   let stx='';
+  const passed=[...scPassed].find(([c,t])=>raceTime-t<=SC_GRACE);
   if(state==='redflag') stx='<span class="red">Bandiera rossa'+(redReason?' · '+redReason:'')+'</span>';
-  else if(player.pit) stx='Box '+Math.max(0,PIT_TIME-player.pit.t).toFixed(1)+' s';
+  else if(player.pit) stx='Box '+Math.max(0,pitTotal(player.pit)-player.pit.t).toFixed(1)+' s';
   else if(player.penalty&&!player.out) stx='<span class="warn"><i class="bw"></i>Bandiera bianca e nera · stop ai box</span>';
   else if(heavyRain&&player.tyre!=='wet'&&!player.out&&!player.finished) stx='<span class="red">Doppia pioggia: con gomme da asciutto non sterzi</span>';
+  else if(SC&&passed&&!player.out&&!player.finished) stx='<span class="warn">'+passed[0].name+' ti ha passato · riprendi la posizione: '+Math.max(0,SC_GRACE-(raceTime-passed[1])).toFixed(1)+' s</span>';
   else if(SC&&!player.out&&!player.finished) stx='<span class="sc">Safety car · niente sorpassi</span>';
   else if(player.flag&&!player.out) stx='<span class="warn"><i class="flag"></i>Rientra ai box</span>';
   else if(SESSION&&state==='race'&&!player.finished) stx=sessionStatus(st);
+  else if(state==='race'&&!player.finished&&(stintStatus(player)||player.emap>0)) stx=[stintStatus(player),player.emap>0?'Mappa aggressiva · '+(player.emap>1?player.emap+' giri':'1 giro'):''].filter(Boolean).join(' · ');
   else if(state==='race'&&!player.finished&&(player.boost>0||player.tow)) stx=[player.boost>0?'Boost +'+player.boost+'%':'',player.tow?'Scia':''].filter(Boolean).join(' · ');
   if(hud.status._v!==stx){hud.status.innerHTML=stx; hud.status._v=stx;}
   boardT-=dt; if(boardT<=0){boardT=0.25; hud.board.innerHTML=gapsHTML(); if(endShown&&finLive) $('finList').innerHTML=standingsHTML(true);}
@@ -2508,6 +2673,7 @@ function update(dt){
     }
   }
   if(SESSION&&state==='race') sessionTick();
+  if(state==='race') for(const c of cars) stintTick(c);
   // registrazione del fantasma (posizioni del giro in corso, 20 al secondo)
   if(state==='race'&&player&&!player.finished&&!player.out){
     ghostAcc+=dt;
@@ -2518,10 +2684,19 @@ function update(dt){
   // sorpasso in regime di safety car: bandiera bianca e nera e stop ai box obbligatorio
   if(SC&&state==='race'&&player&&!player.out&&!player.finished&&!player.pit&&!player.penalty){
     const ahead=new Set(cars.filter(c=>c!==player&&score(c)>score(player)));
-    if(scAhead) for(const c of scAhead) if(!ahead.has(c)&&!c.pit&&!c.out&&!c.gone&&!c.finished){
-      player.penalty=true; showMsg('Bandiera bianca e nera: sorpasso con la safety car',2.6,true); break; }
+    const live=c=>!c.pit&&!c.out&&!c.gone&&!c.finished;
+    if(scAhead){
+      // ti ha passato un’auto: hai 3 secondi per riprenderti la posizione senza penalità
+      for(const c of ahead) if(!scAhead.has(c)&&live(c)){ scPassed.set(c,raceTime); showMsg(c.name+' ti ha superato: riprendi la posizione entro '+SC_GRACE+' s',2.2,true); }
+      for(const c of scAhead) if(!ahead.has(c)&&live(c)){
+        const t=scPassed.get(c); scPassed.delete(c);
+        if(t!=null&&raceTime-t<=SC_GRACE){ showMsg('Posizione su '+c.name+' recuperata: nessuna penalità',1.8,true); continue; }
+        player.penalty=true; showMsg('Bandiera bianca e nera: sorpasso con la safety car',2.6,true); break;
+      }
+    }
+    for(const [c,t] of scPassed) if(raceTime-t>SC_GRACE||!ahead.has(c)) scPassed.delete(c);
     scAhead=player.penalty?null:ahead;
-  } else scAhead=null;
+  } else { scAhead=null; scPassed.clear(); }
 
   if(SC&&state==='race'){
     const lead=ORDER.find(c=>!c.out&&!c.gone);
